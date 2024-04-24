@@ -1,0 +1,24 @@
+{
+  "name": "gitorial-cli",
+  "version": "1.0.0",
+  "description": "CLI Tools for Creating and Managing a Gitorial",
+  "main": "src/index.js",
+  "bin": "src/index.js",
+  "scripts": {
+    "start": "node src/index.js"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/gitorial-sdk/cli.git"
+  },
+  "author": "Shawn Tabrizi",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/gitorial-sdk/cli/issues"
+  },
+  "homepage": "https://github.com/gitorial-sdk/cli#readme",
+  "dependencies": {
+    "commander": "^12.0.0",
+    "simple-git": "^3.24.0"
+  }
+}
