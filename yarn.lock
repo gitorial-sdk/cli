@@ -16,7 +16,7 @@
 
 commander@^12.0.0:
   version "12.0.0"
-  resolved "https://registry.npmjs.org/commander/-/commander-12.0.0.tgz"
+  resolved "https://registry.yarnpkg.com/commander/-/commander-12.0.0.tgz#b929db6df8546080adfd004ab215ed48cf6f2592"
   integrity sha512-MwVNWlYjDTtOjX5PiD7o5pK0UrFU/OYgcJfjjK4RaHZETNtjJqrZa9Y9ds88+A+f+d5lv+561eZ+yCKoS3gbAA==
 
 debug@^4.1.1, debug@^4.3.4:

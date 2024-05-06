@@ -1,82 +1,96 @@
 const simpleGit = require('simple-git');
 const fs = require('fs');
 const path = require('path');
-const { promisify } = require('util');
-const { execSync } = require("child_process");
+const { COMMIT_INFO, TEMP_FOLDER } = require('./constants');
 
-const exec = promisify(require('child_process').exec);
+function copyFilesAndDirectories(source, target) {
+	// Check if source exists
+	if (!fs.existsSync(source)) {
+		console.error(`Source directory ${source} does not exist.`);
+		return;
+	}
 
-async function cloneRepository(sourcePath, destinationPath) {
-  try {
-    await exec(`git clone ${sourcePath} ${destinationPath}`);
-    console.log('Repository cloned successfully.');
-  } catch (error) {
-    throw new Error(`Failed to clone repository: ${error.message}`);
-  }
+	// Create target directory if it doesn't exist
+	if (!fs.existsSync(target)) {
+		fs.mkdirSync(target, { recursive: true });
+	}
+
+	// Get list of items in source directory
+	const items = fs.readdirSync(source);
+
+	// Copy each item to target directory
+	items.forEach(item => {
+		// Skip .git folder
+		if (item === '.git') {
+			return;
+		}
+
+		const sourcePath = path.join(source, item);
+		const targetPath = path.join(target, item);
+		if (fs.statSync(sourcePath).isDirectory()) {
+			// Recursively copy directories
+			copyFilesAndDirectories(sourcePath, targetPath);
+		} else {
+			// Copy files
+			fs.copyFileSync(sourcePath, targetPath);
+		}
+	});
 }
 
 async function unpack(gitPath, outputPath) {
-  try {
-    // Clone the repository into a new folder
-    const tempDir = path.join(outputPath, 'temp_repo');
-    await cloneRepository(gitPath, tempDir);
+	try {
+		// Clone the repository into a new folder
+		const git_init = simpleGit();
+		const tempDir = path.join(outputPath, TEMP_FOLDER);
+		await git_init.clone(gitPath, tempDir, ['--branch', 'master']);
 
-    const git = simpleGit(tempDir);
+		const git = simpleGit(tempDir);
 
-    // Retrieve commit log
-    const log = await git.log();
+		// Retrieve commit log
+		const logs = await git.log();
 
-	// Get the list of commits
-	console.log("Fetching commits...");
-	const commitHashes = execSync(`git -C ${tempDir} log --format=%H::%s`, {
-		encoding: "utf-8",
-	})
-		.trim()
-		.split("\n");
 
-	console.log(commitHashes)
+		let stepCounter = 0;
 
-	let stepCounter = 0;
+		// Create a folder for each commit
+		// Reverse to make the oldest commit first
+		for ([index, log] of logs.all.reverse().entries()) {
+			const commitHash = log.hash;
+			const commitMessage = log.message;
 
-	// Create a folder for each commit
-	// Reverse to make the oldest commit first
-	commitHashes.reverse().forEach((commitInfo, index) => {
-		const [commitHash, commitMessage] = commitInfo.split("::");
+			let stepFolder = path.join(outputPath, stepCounter.toString());
+			if (!fs.existsSync(stepFolder)) {
+				fs.mkdirSync(stepFolder);
+			}
 
-		let stepFolder = path.join(outputPath, stepCounter.toString());
-		if (!fs.existsSync(stepFolder)) {
-			fs.mkdirSync(stepFolder);
+			// Checkout the commit
+			console.log(`Checking out commit: ${commitHash}`);
+			await git.checkout(commitHash);
+
+			// Copy the contents to the commit folder
+			copyFilesAndDirectories(tempDir, stepFolder);
+			console.log(`Contents copied from ${tempDir} to ${stepFolder}`);
+
+			// Create a JSON file in the commit folder
+			const jsonFilePath = path.join(stepFolder, COMMIT_INFO);
+			const commitInfoObject = {
+				"_Note": "This file will not be included in your final gitorial.",
+				commitMessage,
+			};
+
+			fs.writeFileSync(jsonFilePath, JSON.stringify(commitInfoObject, null, 2));
+
+
+			stepCounter += 1;
 		}
 
-		// Checkout the commit
-		console.log(`Checking out commit: ${commitHash}`);
-		execSync(`git -C ${tempDir} checkout ${commitHash}`);
+		// Clean up source folder
+		fs.rmSync(tempDir, { recursive: true, force: true });
 
-		// Copy the contents to the commit folder
-		execSync(`cp -r ${tempDir}/* ${stepFolder}`);
-		console.log(`Contents of commit ${index} copied to ${stepFolder}`);
-
-
-		// Create a JSON file in the commit folder
-		const jsonFilePath = path.join(stepFolder, "commit_info.json");
-		const commitInfoObject = {
-			commitMessage,
-		};
-
-		fs.writeFileSync(jsonFilePath, JSON.stringify(commitInfoObject, null, 2));
-
-
-		stepCounter += 1;
-	});
-
-	// Clean up source folder
-	fs.rmSync(tempDir, { recursive: true, force: true });
-
-	console.log("Process completed.");
-
-  } catch (error) {
-    console.error('Error:', error.message || error);
-  }
+		console.log("Process completed.");
+	} catch (error) {
+		console.error('Error:', error.message || error);
+	}
 
 }
 
