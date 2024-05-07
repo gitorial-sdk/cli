@@ -1,7 +1,7 @@
 const simpleGit = require('simple-git');
 const fs = require('fs');
 const path = require('path');
-const { COMMIT_INFO } = require('./constants');
+const { GITORIAL_METADATA } = require('./constants');
 
 function copyAllContentsAndReplace(sourceDir, targetDir) {
 	// Create target directory if it doesn't exist
@@ -44,8 +44,8 @@ async function repack(inputPath, repoPath, branchName) {
 		for (const commit of commits) {
 			const commitFolderPath = path.join(inputPath, commit);
 
-			// Read commit message from COMMIT_INFO
-			const commitInfoPath = path.join(commitFolderPath, COMMIT_INFO);
+			// Read commit message from GITORIAL_METADATA
+			const commitInfoPath = path.join(commitFolderPath, GITORIAL_METADATA);
 			const commitInfo = JSON.parse(fs.readFileSync(commitInfoPath, 'utf-8'));
 			const commitMessage = commitInfo.commitMessage;
 
@@ -57,9 +57,9 @@ async function repack(inputPath, repoPath, branchName) {
 			// Stage all files
 			await git.add('*');
 
-			// Remove COMMIT_INFO
-			await git.reset(COMMIT_INFO);
-			await git.rm(COMMIT_INFO);
+			// Remove GITORIAL_METADATA
+			await git.reset(GITORIAL_METADATA);
+			await git.rm(GITORIAL_METADATA);
 
 			// Create commit with commit message
 			await git.commit(commitMessage);

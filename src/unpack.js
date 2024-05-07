@@ -1,7 +1,8 @@
 const simpleGit = require('simple-git');
 const fs = require('fs');
+const os = require('os');
 const path = require('path');
-const { COMMIT_INFO, TEMP_FOLDER } = require('./constants');
+const { GITORIAL_METADATA } = require('./constants');
 
 function copyFilesAndDirectories(source, target) {
 	// Check if source exists
@@ -41,16 +42,19 @@ async function unpack(gitPath, outputPath) {
 	try {
 		// Clone the repository into a new folder
 		const git_init = simpleGit();
-		const tempDir = path.join(outputPath, TEMP_FOLDER);
+		const tempDir = await fs.mkdtempSync(path.join(os.tmpdir(), 'gitorial-'));
 		await git_init.clone(gitPath, tempDir, ['--branch', 'master']);
 
 		const git = simpleGit(tempDir);
 
+
+		// Make a folder for the output
+		if (!fs.existsSync(outputPath)) {
+			fs.mkdirSync(outputPath);
+		}
+
 		// Retrieve commit log
 		const logs = await git.log();
-
-
-		let stepCounter = 0;
 
 		// Create a folder for each commit
 		// Reverse to make the oldest commit first
@@ -58,7 +62,7 @@ async function unpack(gitPath, outputPath) {
 			const commitHash = log.hash;
 			const commitMessage = log.message;
 
-			let stepFolder = path.join(outputPath, stepCounter.toString());
+			let stepFolder = path.join(outputPath, index.toString());
 			if (!fs.existsSync(stepFolder)) {
 				fs.mkdirSync(stepFolder);
 			}
@@ -72,16 +76,13 @@ async function unpack(gitPath, outputPath) {
 			console.log(`Contents copied from ${tempDir} to ${stepFolder}`);
 
 			// Create a JSON file in the commit folder
-			const jsonFilePath = path.join(stepFolder, COMMIT_INFO);
+			const jsonFilePath = path.join(stepFolder, GITORIAL_METADATA);
 			const commitInfoObject = {
 				"_Note": "This file will not be included in your final gitorial.",
 				commitMessage,
 			};
 
 			fs.writeFileSync(jsonFilePath, JSON.stringify(commitInfoObject, null, 2));
-
-
-			stepCounter += 1;
 		}
 
 		// Clean up source folder
