@@ -8,16 +8,16 @@ program
 
 // Command to organize commits into numbered folders
 program
-	.command('unpack <inputPath> <outputPath>')
-	.description('Unpack commits of a repo into numbered folders.')
-	.action((inputPath, outputPath) => {
-		require('./unpack')(inputPath, outputPath);
+	.command('unpack <gitorialPath> <gitorialBranch> <unpackedBranch>')
+	.description('Unpack commits of a gitorial branch into numbered folders in another branch.')
+	.action((gitorialPath, gitorialBranch, unpackedBranch) => {
+		require('./unpack')(gitorialPath, gitorialBranch, unpackedBranch);
 	});
 
 // Command to create commits from numbered folders
 program
-	.command('repack <inputPath> <repoPath> <branchName>')
-	.description('Create commits from numbered folders')
+	.command('repack <gitorialPath> <unpackedBranch> <repackBranch>')
+	.description('Create commits from numbered folders. Must repack into a new branch.')
 	.action((inputPath, repoPath, branchName) => {
 		require('./repack')(inputPath, repoPath, branchName);
 	});

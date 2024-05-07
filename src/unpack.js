@@ -3,6 +3,7 @@ const fs = require('fs');
 const os = require('os');
 const path = require('path');
 const { GITORIAL_METADATA } = require('./constants');
+const { copyAllContentsAndReplace, doesBranchExist } = require('./utils')
 
 function copyFilesAndDirectories(source, target) {
 	// Check if source exists
@@ -38,18 +39,21 @@ function copyFilesAndDirectories(source, target) {
 	});
 }
 
-async function unpack(gitPath, outputPath) {
+async function unpack(gitPath, inputBranch, outputBranch) {
 	try {
-		// Clone the repository into a new temporary folder
-		const tempDir = await fs.mkdtempSync(path.join(os.tmpdir(), 'gitorial-'));
-		const git = simpleGit(tempDir);
+		// Create a new temporary folder
+		const sourceDir = fs.mkdtempSync(path.join(os.tmpdir(), 'gitorial-source-'));
+		const unpackedDir = fs.mkdtempSync(path.join(os.tmpdir(), 'gitorial-unpacked-'));
+
+		// Clone the repo into the source folder.
+		const tempGit = simpleGit(sourceDir);
 
 		// Resolve the full path to the local repository
 		const resolvedRepoPath = path.resolve(gitPath);
-		await git.clone(resolvedRepoPath, '.', ['--branch', 'master']);
+		await tempGit.clone(resolvedRepoPath, '.', ['--branch', inputBranch]);
 
 		// Retrieve commit log
-		const logs = await git.log();
+		const logs = await tempGit.log();
 
 		// Create a folder for each commit
 		// Reverse to make the oldest commit first
@@ -57,15 +61,15 @@ async function unpack(gitPath, outputPath) {
 			const commitHash = log.hash;
 			const commitMessage = log.message;
 
-			let stepFolder = path.join(outputPath, index.toString());
+			let stepFolder = path.join(unpackedDir, index.toString());
 
 			// Checkout the commit
 			console.log(`Checking out commit: ${commitHash}`);
-			await git.checkout(commitHash);
+			await tempGit.checkout(commitHash);
 
 			// Copy the contents to the commit folder
-			copyFilesAndDirectories(tempDir, stepFolder);
-			console.log(`Contents copied from ${tempDir} to ${stepFolder}`);
+			copyFilesAndDirectories(sourceDir, stepFolder);
+			console.log(`Contents copied from ${sourceDir} to ${stepFolder}`);
 
 			// Create a JSON file in the commit folder
 			const jsonFilePath = path.join(stepFolder, GITORIAL_METADATA);
@@ -77,8 +81,29 @@ async function unpack(gitPath, outputPath) {
 			fs.writeFileSync(jsonFilePath, JSON.stringify(commitInfoObject, null, 2));
 		}
 
+		let sourceGit = simpleGit(gitPath);
+
+		// Check if the branch exists in the list of local branches
+		const branchExists = await doesBranchExist(sourceGit, outputBranch)
+
+		if (!branchExists) {
+			// Create a fresh branch if it does not exist.
+			await sourceGit.raw(['switch', '--orphan', outputBranch]);
+		} else {
+			// Checkout the current branch if it does.
+			await sourceGit.checkout(outputBranch)
+		}
+		copyAllContentsAndReplace(unpackedDir, gitPath);
+
+		// Stage all files
+		await sourceGit.add('*');
+
+		// Create commit with commit message
+		await sourceGit.commit(`Unpacked from ${inputBranch}`);
+
 		// Clean up source folder
-		fs.rmSync(tempDir, { recursive: true });
+		fs.rmSync(sourceDir, { recursive: true });
+		fs.rmSync(unpackedDir, { recursive: true });
 		console.log("Temporary files removed.");
 
 		console.log("Process completed.");
