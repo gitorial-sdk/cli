@@ -48,11 +48,6 @@ async function unpack(gitPath, outputPath) {
 		const resolvedRepoPath = path.resolve(gitPath);
 		await git.clone(resolvedRepoPath, '.', ['--branch', 'master']);
 
-		// Make a folder for the output
-		if (!fs.existsSync(outputPath)) {
-			fs.mkdirSync(outputPath);
-		}
-
 		// Retrieve commit log
 		const logs = await git.log();
 
@@ -63,9 +58,6 @@ async function unpack(gitPath, outputPath) {
 			const commitMessage = log.message;
 
 			let stepFolder = path.join(outputPath, index.toString());
-			if (!fs.existsSync(stepFolder)) {
-				fs.mkdirSync(stepFolder);
-			}
 
 			// Checkout the commit
 			console.log(`Checking out commit: ${commitHash}`);
