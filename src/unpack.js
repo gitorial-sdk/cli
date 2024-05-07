@@ -40,13 +40,13 @@ function copyFilesAndDirectories(source, target) {
 
 async function unpack(gitPath, outputPath) {
 	try {
-		// Clone the repository into a new folder
-		const git_init = simpleGit();
+		// Clone the repository into a new temporary folder
 		const tempDir = await fs.mkdtempSync(path.join(os.tmpdir(), 'gitorial-'));
-		await git_init.clone(gitPath, tempDir, ['--branch', 'master']);
-
 		const git = simpleGit(tempDir);
 
+		// Resolve the full path to the local repository
+		const resolvedRepoPath = path.resolve(gitPath);
+		await git.clone(resolvedRepoPath, '.', ['--branch', 'master']);
 
 		// Make a folder for the output
 		if (!fs.existsSync(outputPath)) {
@@ -86,7 +86,8 @@ async function unpack(gitPath, outputPath) {
 		}
 
 		// Clean up source folder
-		fs.rmSync(tempDir, { recursive: true, force: true });
+		fs.rmSync(tempDir, { recursive: true });
+		console.log("Temporary files removed.");
 
 		console.log("Process completed.");
 	} catch (error) {
