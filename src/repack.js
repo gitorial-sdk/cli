@@ -3,7 +3,7 @@ const fs = require('fs');
 const os = require('os');
 const path = require('path');
 const { GITORIAL_METADATA } = require('./constants');
-const { copyAllContentsAndReplace, doesBranchExist } = require('./utils')
+const { copyAllContentsAndReplace } = require('./utils')
 
 async function repack(repoPath, unpackedBranch, repackedBranch) {
 	try {

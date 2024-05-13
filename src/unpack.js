@@ -3,43 +3,9 @@ const fs = require('fs');
 const os = require('os');
 const path = require('path');
 const { GITORIAL_METADATA } = require('./constants');
-const { copyAllContentsAndReplace, doesBranchExist } = require('./utils')
+const { copyAllContentsAndReplace, doesBranchExist, copyFilesAndDirectories } = require('./utils')
 
-function copyFilesAndDirectories(source, target) {
-	// Check if source exists
-	if (!fs.existsSync(source)) {
-		console.error(`Source directory ${source} does not exist.`);
-		return;
-	}
-
-	// Create target directory if it doesn't exist
-	if (!fs.existsSync(target)) {
-		fs.mkdirSync(target, { recursive: true });
-	}
-
-	// Get list of items in source directory
-	const items = fs.readdirSync(source);
-
-	// Copy each item to target directory
-	items.forEach(item => {
-		// Skip .git folder
-		if (item === '.git') {
-			return;
-		}
-
-		const sourcePath = path.join(source, item);
-		const targetPath = path.join(target, item);
-		if (fs.statSync(sourcePath).isDirectory()) {
-			// Recursively copy directories
-			copyFilesAndDirectories(sourcePath, targetPath);
-		} else {
-			// Copy files
-			fs.copyFileSync(sourcePath, targetPath);
-		}
-	});
-}
-
-async function unpack(gitPath, inputBranch, outputBranch) {
+async function unpack(repoPath, inputBranch, outputBranch) {
 	try {
 		// Create a new temporary folder
 		const sourceDir = fs.mkdtempSync(path.join(os.tmpdir(), 'gitorial-source-'));
@@ -49,7 +15,7 @@ async function unpack(gitPath, inputBranch, outputBranch) {
 		const tempGit = simpleGit(sourceDir);
 
 		// Resolve the full path to the local repository
-		const resolvedRepoPath = path.resolve(gitPath);
+		const resolvedRepoPath = path.resolve(repoPath);
 		await tempGit.clone(resolvedRepoPath, '.', ['--branch', inputBranch]);
 
 		// Retrieve commit log
@@ -81,7 +47,7 @@ async function unpack(gitPath, inputBranch, outputBranch) {
 			fs.writeFileSync(jsonFilePath, JSON.stringify(commitInfoObject, null, 2));
 		}
 
-		let sourceGit = simpleGit(gitPath);
+		let sourceGit = simpleGit(repoPath);
 
 		// Check if the branch exists in the list of local branches
 		const branchExists = await doesBranchExist(sourceGit, outputBranch)
@@ -93,7 +59,7 @@ async function unpack(gitPath, inputBranch, outputBranch) {
 			// Checkout the current branch if it does.
 			await sourceGit.checkout(outputBranch)
 		}
-		copyAllContentsAndReplace(unpackedDir, gitPath);
+		copyAllContentsAndReplace(unpackedDir, repoPath);
 
 		// Stage all files
 		await sourceGit.add('*');

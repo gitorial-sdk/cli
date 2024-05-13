@@ -22,4 +22,12 @@ program
 		require('./repack')(inputPath, repoPath, branchName);
 	});
 
+// Command to create commits from numbered folders
+program
+	.command('mdbook <gitorialPath> <gitorialBranch> <mdbookBranch>')
+	.description('Create an mdBook from a Gitorial source.')
+	.action((gitorialPath, gitorialBranch, mdbookBranch) => {
+		require('./mdbook')(gitorialPath, gitorialBranch, mdbookBranch);
+	});
+
 program.parse(process.argv);

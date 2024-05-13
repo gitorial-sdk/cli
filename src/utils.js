@@ -29,6 +29,40 @@ function copyAllContentsAndReplace(sourceDir, targetDir) {
 	});
 }
 
+function copyFilesAndDirectories(source, target) {
+	// Check if source exists
+	if (!fs.existsSync(source)) {
+		console.error(`Source directory ${source} does not exist.`);
+		return;
+	}
+
+	// Create target directory if it doesn't exist
+	if (!fs.existsSync(target)) {
+		fs.mkdirSync(target, { recursive: true });
+	}
+
+	// Get list of items in source directory
+	const items = fs.readdirSync(source);
+
+	// Copy each item to target directory
+	items.forEach(item => {
+		// Skip .git folder
+		if (item === '.git') {
+			return;
+		}
+
+		const sourcePath = path.join(source, item);
+		const targetPath = path.join(target, item);
+		if (fs.statSync(sourcePath).isDirectory()) {
+			// Recursively copy directories
+			copyFilesAndDirectories(sourcePath, targetPath);
+		} else {
+			// Copy files
+			fs.copyFileSync(sourcePath, targetPath);
+		}
+	});
+}
+
 async function doesBranchExist(git, branchName) {
 	try {
 		// Get a list of all local branches
@@ -42,4 +76,4 @@ async function doesBranchExist(git, branchName) {
 	}
 }
 
-module.exports = { copyAllContentsAndReplace, doesBranchExist };
+module.exports = { copyAllContentsAndReplace, doesBranchExist, copyFilesAndDirectories };
