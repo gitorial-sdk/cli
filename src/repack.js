@@ -5,13 +5,13 @@ const path = require('path');
 const { GITORIAL_METADATA } = require('./constants');
 const { copyAllContentsAndReplace } = require('./utils')
 
-async function repack(repoPath, unpackedBranch, repackedBranch, subFolder) {
+async function repack(repoPath, inputBranch, outputBranch, subFolder) {
 	try {
 		const git = simpleGit(repoPath);
-		await git.raw(['switch', '--orphan', repackedBranch]);
+		await git.raw(['switch', '--orphan', outputBranch]);
 
 		const tempDir = fs.mkdtempSync(path.join(os.tmpdir(), 'gitorial-repack-'));
-		await git.clone(repoPath, tempDir, ['--branch', unpackedBranch]);
+		await git.clone(repoPath, tempDir, ['--branch', inputBranch]);
 
 		let unpackedDir = tempDir;
 		if (subFolder) {
@@ -31,8 +31,6 @@ async function repack(repoPath, unpackedBranch, repackedBranch, subFolder) {
 			const commitInfoPath = path.join(stepFolderPath, GITORIAL_METADATA);
 			const commitInfo = JSON.parse(fs.readFileSync(commitInfoPath, 'utf-8'));
 			const commitMessage = commitInfo.commitMessage;
-
-			console.log(commitMessage);
 
 			// Copy files from numbered folder to repo path
 			copyAllContentsAndReplace(stepFolderPath, repoPath);

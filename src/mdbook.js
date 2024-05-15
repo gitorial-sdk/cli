@@ -4,7 +4,7 @@ const os = require('os');
 const path = require("path");
 const { copyAllContentsAndReplace, copyFilesAndDirectories, doesBranchExist } = require("./utils");
 
-async function mdbook(repoPath, inputBranch, outputBranch) {
+async function mdbook(repoPath, inputBranch, outputBranch, subFolder) {
 	try {
 		// Create a new temporary folder
 		const sourceDir = fs.mkdtempSync(path.join(os.tmpdir(), 'gitorial-source-'));
@@ -28,9 +28,15 @@ async function mdbook(repoPath, inputBranch, outputBranch) {
 			await sourceGit.raw(['switch', '--orphan', outputBranch]);
 		} else {
 			// Checkout the current branch if it does.
-			await sourceGit.checkout(outputBranch)
+			await sourceGit.checkout(outputBranch);
 		}
-		copyAllContentsAndReplace(mdbookDir, repoPath);
+
+		let outputFolder = repoPath;
+		if (subFolder) {
+			outputFolder = path.join(outputFolder, subFolder);
+		}
+
+		copyAllContentsAndReplace(mdbookDir, outputFolder);
 
 		// Stage all files
 		await sourceGit.add('*');

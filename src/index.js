@@ -31,12 +31,16 @@ program
 		require('./repack')(path, inputBranch, outputBranch, subFolder);
 	});
 
-// Command to create an mdBook from a Gitorial.
+// Command to scaffold an mdBook source from a Gitorial.
 program
-	.command('mdbook <gitorialPath> <gitorialBranch> <mdbookBranch>')
-	.description('Create an mdBook from a Gitorial source.')
-	.action((gitorialPath, gitorialBranch, mdbookBranch) => {
-		require('./mdbook')(gitorialPath, gitorialBranch, mdbookBranch);
+	.command('mdbook')
+	.description('Scaffold the contents of a Gitorial in a new branch in the mdBook source format. You need to initialize an mdBook yourself ')
+	.requiredOption('-p, --path <path>', 'The local path for the git repo containing the Gitorial.')
+	.requiredOption('-i, --inputBranch <inputBranch>', 'The branch in the repo with the Gitorial.')
+	.requiredOption('-o, --outputBranch <outputBranch>', 'The branch where you want your mdBook to live')
+	.option('-s, --subFolder <subFolder>', 'The subfolder (relative to the <path>) where you want the mdBook source material to be placed.', 'src')
+	.action(({ path, inputBranch, outputBranch, subFolder }) => {
+		require('./mdbook')(path, inputBranch, outputBranch, subFolder);
 	});
 
 program.parse(process.argv);
