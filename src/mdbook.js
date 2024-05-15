@@ -156,6 +156,19 @@ async function processGitorial(sourceDir, mdbookDir) {
 		const diffFilePath = path.join(outputFolder, diff_name);
 		fs.writeFileSync(diffFilePath, diffRaw);
 
+		let fileStatus = diffOutput.split("\n").map((line) => {
+			const [status, file] = line.split("\t");
+			return { status, file };
+		});
+
+		if (isTemplate) {
+			templateFiles = fileStatus;
+		} else if (isSolution) {
+			solutionFiles = fileStatus;
+		} else {
+			sourceFiles = fileStatus;
+		}
+
 		// Reset sanity check and increment step
 		// Handle when both template and solution is found,
 		// or when there is a step that is neither a template or solution
