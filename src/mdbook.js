@@ -43,7 +43,7 @@ async function mdbook(repoPath, inputBranch, outputBranch) {
 		fs.rmSync(mdbookDir, { recursive: true });
 		console.log("Temporary files removed.");
 
-		console.log("Process completed.");
+		console.log("mdBook completed.");
 	} catch (error) {
 		console.error('Error:', error.message || error);
 	}
@@ -150,26 +150,6 @@ async function processGitorial(sourceDir, mdbookDir) {
 		const diffFilePath = path.join(outputFolder, diff_name);
 		fs.writeFileSync(diffFilePath, diffRaw);
 
-		console.log("hi shawn", diffOutput)
-
-		// Create a JSON file in the commit folder
-		const jsonFilePath = path.join(outputFolder, "commit_info.json");
-		const commitInfoObject = {
-			commitHash,
-			commitMessage,
-			files: diffOutput
-		};
-
-		if (isTemplate) {
-			templateFiles = commitInfoObject.files;
-		} else if (isSolution) {
-			solutionFiles = commitInfoObject.files;
-		} else {
-			sourceFiles = commitInfoObject.files;
-		}
-
-		fs.writeFileSync(jsonFilePath, JSON.stringify(commitInfoObject, null, 2));
-
 		// Reset sanity check and increment step
 		// Handle when both template and solution is found,
 		// or when there is a step that is neither a template or solution
@@ -238,7 +218,7 @@ async function processGitorial(sourceDir, mdbookDir) {
 
 	generateSidebar(mdbookDir, stepNames);
 
-	console.log("Process completed.");
+	console.log("Finished Parsing.");
 }
 
 // Generate the markdown text for files.
