@@ -5,7 +5,7 @@ const path = require('path');
 const { GITORIAL_METADATA } = require('./constants');
 const { copyAllContentsAndReplace, doesBranchExist, copyFilesAndDirectories } = require('./utils')
 
-async function unpack(repoPath, inputBranch, outputBranch) {
+async function unpack(repoPath, inputBranch, outputBranch, outputSubFolder) {
 	try {
 		// Create a new temporary folder
 		const sourceDir = fs.mkdtempSync(path.join(os.tmpdir(), 'gitorial-source-'));
@@ -59,7 +59,13 @@ async function unpack(repoPath, inputBranch, outputBranch) {
 			// Checkout the current branch if it does.
 			await sourceGit.checkout(outputBranch)
 		}
-		copyAllContentsAndReplace(unpackedDir, repoPath);
+
+		let outputFolder = repoPath;
+		if (outputSubFolder) {
+			outputFolder = path.join(repoPath, outputSubFolder)
+		}
+
+		copyAllContentsAndReplace(unpackedDir, outputFolder);
 
 		// Stage all files
 		await sourceGit.add('*');
