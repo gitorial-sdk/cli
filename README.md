@@ -4,45 +4,85 @@ The gitorial-cli is a CLI tool for helping manage and work with a Git repo follo
 
 ## Commands
 
-The following commands are available in this CLI:
+The CLI exposes various commands for managing a Gitorial.
+
+```sh
+Commands:
+  unpack [options]  Unpack a Gitorial into another branch.
+  repack [options]  Create a repacked Gitorial from an unpacked Gitorial. Must repack into a new branch.
+  mdbook [options]  Scaffold the contents of a Gitorial in a new branch in the mdBook source format. You need to initialize an mdBook yourself
+```
 
 ### unpack
 
 ```sh
-yarn start unpack <gitorialPath> <gitorialBranch> <unpackedBranch>
+Usage: index unpack [options]
+
+Unpack a Gitorial into another branch.
+
+Options:
+  -p, --path <path>                  The local path for the git repo containing the Gitorial.
+  -i, --inputBranch <inputBranch>    The branch in the repo with the Gitorial.
+  -o, --outputBranch <outputBranch>  The branch where you want to unpack the Gitorial.
+  -s, --subFolder <subFolder>        The subfolder (relative to the <path>) where you want the unpacked Gitorial to be placed.
+  -h, --help                         display help for command
 ```
 
-The `unpack` command will take a branch in the Gitorial format, and unpack the steps of the gitorial into numbered folders in a separate branch.
+Example: Convert an Gitorial repository from branch `gitorial` into branch `master` as an unpacked set of numbered steps in a folder named `steps`.
 
-`unpackedBranch` can be an existing branch, and a new commit will be added on top of the existing history.
+```sh
+gitorial-cli unpack -p /path/to/rust-state-machine -i gitorial -o master -s steps
+```
 
-A `gitorial_metadata.json` file will be created in each folder, allowing you to update the `commitMessage` for that step when the Gitorial is repacked.
+Output:
+
+```sh
+# git branch: master
+steps/
+├─ 0/
+├─ 1/
+├─ 2/
+├─ ...
+```
 
 ### repack
 
 ```sh
-yarn start repack <gitorialPath> <unpackedBranch> <repackBranch>
+Usage: index repack [options]
+
+Create a repacked Gitorial from an unpacked Gitorial. Must repack into a new branch.
+
+Options:
+  -p, --path <path>                  The local path for the git repo containing the Gitorial.
+  -i, --inputBranch <inputBranch>    The branch in the repo with the unpacked Gitorial.
+  -o, --outputBranch <outputBranch>  The branch where you want to repack the Gitorial. Branch must not exist.
+  -s, --subFolder <subFolder>        The subfolder (relative to the <path>) where you can find the unpacked Gitorial
+  -h, --help                         display help for command
 ```
 
-The `repack` command will take a branch which is in the `unpacked` format (numbered folders with the content of each step), and create a fresh git commit history with those steps as commits in the Gitorial.
+Example: Convert an "unpacked" Gitorial on branch `master` in folder `steps` to a branch `gitorial`
 
-`repackBranch` cannot be an existing branch name, as it risks deleting your Git history by mistake.
+```sh
+gitorial-cli repack -p /path/to/rust-state-machine -i master -s steps -o gitorial
+```
 
-The `gitorial_metadata.json` file will not be included in your repacked Gitorial.
+### mdBook
 
-## Workflow
+```sh
+Usage: index mdbook [options]
 
-The workflow for managing a gitorial is still in development, but assumes the following:
+Scaffold the contents of a Gitorial in a new branch in the mdBook source format. You need to initialize an mdBook yourself
 
-- You have a Git repo with a branch in the Gitorial format.
-- You can `unpack` that branch into a branch named `unpacked`.
-    - You can keep this branch around forever, and always unpack into it. It can act as a history of changes to your Gitorial, since your raw Gitorial always resets its history.
-- You can then make changes to files in the `unpacked` branch. For example:
-    - Creating new step folders.
-	- Editing README or other documentation.
-	- Editing code.
-		- Although it is suggested to make code changes on the Gitorial branch, allowing you to use Git merge to ensure all changes are propagated through the tutorial.
-- You can commit changes or merge pull requests into the `unpacked` branch like normal.
-- When you are happy with the `unpacked` branch, you can `repack` it into a new branch `repacked`.
-- You can audit your changes in Git history (making sure step by step changes have a clean diff).
-- Finally, you can use `git reset repacked && git push --force` on your Gitorial branch to update your Gitorial.
+Options:
+  -p, --path <path>                  The local path for the git repo containing the Gitorial.
+  -i, --inputBranch <inputBranch>    The branch in the repo with the Gitorial.
+  -o, --outputBranch <outputBranch>  The branch where you want your mdBook to live
+  -s, --subFolder <subFolder>        The subfolder (relative to the <path>) where you want the mdBook source material to be placed. (default: "src")
+  -h, --help                         display help for command
+```
+
+Example: Convert a Gitorial at branch `gitorial` to an [mdBook](https://rust-lang.github.io/mdBook/) rendered at branch `mdbook`.
+
+```sh
+gitorial-cli mdbook -p /path/to/rust-state-machine -i gitorial -o mdbook
+```
