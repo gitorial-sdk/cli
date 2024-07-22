@@ -57,6 +57,7 @@ Options:
   -i, --inputBranch <inputBranch>    The branch in the repo with the unpacked Gitorial.
   -o, --outputBranch <outputBranch>  The branch where you want to repack the Gitorial. Branch must not exist.
   -s, --subFolder <subFolder>        The subfolder (relative to the <path>) where you can find the unpacked Gitorial
+  --force                            Force the repack, even if it would replace an existing branch. WARNING: this can delete the branch history!
   -h, --help                         display help for command
 ```
 

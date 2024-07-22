@@ -5,10 +5,20 @@ const path = require('path');
 const { GITORIAL_METADATA } = require('./constants');
 const { copyAllContentsAndReplace } = require('./utils')
 
-async function repack(repoPath, inputBranch, outputBranch, subFolder) {
+async function repack(repoPath, inputBranch, outputBranch, subFolder, force) {
 	try {
 		const git = simpleGit(repoPath);
-		await git.raw(['switch', '--orphan', outputBranch]);
+
+		if (force) {
+			try {
+				await git.raw(['branch', '-D', outputBranch]);
+			} catch {
+				// ignore if the branch cannot be deleted
+			}
+			await git.raw(['switch', '--orphan', outputBranch]);
+		} else {
+			await git.raw(['switch', '--orphan', outputBranch]);
+		}
 
 		const tempDir = fs.mkdtempSync(path.join(os.tmpdir(), 'gitorial-repack-'));
 		await git.clone(repoPath, tempDir, ['--branch', inputBranch]);

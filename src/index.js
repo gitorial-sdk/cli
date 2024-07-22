@@ -27,8 +27,9 @@ program
 	.requiredOption('-i, --inputBranch <inputBranch>', 'The branch in the repo with the unpacked Gitorial.')
 	.requiredOption('-o, --outputBranch <outputBranch>', 'The branch where you want to repack the Gitorial. Branch must not exist.')
 	.option('-s, --subFolder <subFolder>', 'The subfolder (relative to the <path>) where you can find the unpacked Gitorial')
-	.action(({ path, inputBranch, outputBranch, subFolder }) => {
-		require('./repack')(path, inputBranch, outputBranch, subFolder);
+	.option('--force', 'Force the repack, even if it would replace an existing branch. WARNING: this can delete the branch history!')
+	.action(({ path, inputBranch, outputBranch, subFolder, force }) => {
+		require('./repack')(path, inputBranch, outputBranch, subFolder, force);
 	});
 
 // Command to scaffold an mdBook source from a Gitorial.
