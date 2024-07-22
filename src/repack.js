@@ -10,10 +10,18 @@ async function repack(repoPath, inputBranch, outputBranch, subFolder, force) {
 		const git = simpleGit(repoPath);
 
 		if (force) {
+			let saveBranch = `${outputBranch}-__gitorial-old`;
+			// Delete the existing `__gitorial-old` branch if it exists
 			try {
-				await git.raw(['branch', '-D', outputBranch]);
-			} catch {
-				// ignore if the branch cannot be deleted
+				await git.raw(['branch', '-D', saveBranch]);
+			} catch (error) {
+				// Ignore the error if the branch does not exist
+			}
+			// Move the output branch to the save branch
+			try {
+				await git.branch(['-m', outputBranch, saveBranch]);
+			} catch (error) {
+				// Ignore the error if the branch does not exist
 			}
 			await git.raw(['switch', '--orphan', outputBranch]);
 		} else {
