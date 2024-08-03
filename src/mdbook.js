@@ -80,6 +80,7 @@ async function processGitorial(sourceDir, mdbookDir) {
 		const isSolution = commitMessage.toLowerCase().startsWith("solution: ");
 		const isSection = commitMessage.toLowerCase().startsWith("section: ");
 		const isAction = commitMessage.toLowerCase().startsWith("action: ");
+		const isStartingTemplate = commitMessage.toLowerCase().startsWith("starting-template");
 
 		let stepFolder = path.join(mdbookDir, stepCounter.toString());
 		if (!fs.existsSync(stepFolder)) {
@@ -92,6 +93,11 @@ async function processGitorial(sourceDir, mdbookDir) {
 
 		// Default assumption is output is not a template or solution
 		let outputFolder = sourceFolder;
+
+		// We skip the starting template commit since it is only used for starting the project.
+		if (isStartingTemplate) {
+			continue;
+		}
 
 		if (isTemplate) {
 			// Check there isn't a template already in queue

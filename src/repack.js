@@ -63,6 +63,12 @@ async function repack(repoPath, inputBranch, outputBranch, subFolder, force) {
 			// Create commit with commit message
 			await git.commit(commitMessage);
 
+			// We want to tag the `starting-template` so it can be easily referenced.
+			if (commitMessage == 'starting-template') {
+				console.log(`Adding ${commitMessage} tag.`);
+				await git.raw(['tag', 'starting-template', '--force']);
+			}
+
 			console.log(`Commit created for step ${step} with message: ${commitMessage}`);
 		}
 
