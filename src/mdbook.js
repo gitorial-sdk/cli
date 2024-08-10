@@ -75,6 +75,7 @@ async function processGitorial(sourceDir, mdbookDir) {
 		const commitHash = log.hash;
 		const commitMessage = log.message;
 
+		// These are the possible gitorial commit types
 		const isReadme = commitMessage.toLowerCase().startsWith("readme: ");
 		const isTemplate = commitMessage.toLowerCase().startsWith("template: ");
 		const isSolution = commitMessage.toLowerCase().startsWith("solution: ");
@@ -82,6 +83,7 @@ async function processGitorial(sourceDir, mdbookDir) {
 		const isAction = commitMessage.toLowerCase().startsWith("action: ");
 		const isStartingTemplate = commitMessage.toLowerCase().startsWith("starting-template");
 
+		// A step may not increment with a new commit, for example a `template` and `solution` happen in one step.
 		let stepFolder = path.join(mdbookDir, stepCounter.toString());
 		if (!fs.existsSync(stepFolder)) {
 			fs.mkdirSync(stepFolder);
@@ -213,7 +215,7 @@ async function processGitorial(sourceDir, mdbookDir) {
 					name: getStepName(templateFolder),
 					is_section: false,
 				});
-			} else {
+			} else if (isAction) {
 				markdownContent = sourceMarkdown;
 				let sourceFileText = generateFileMarkdown("source", sourceFiles);
 				markdownContent = markdownContent.replace(
@@ -231,6 +233,8 @@ async function processGitorial(sourceDir, mdbookDir) {
 					name: getStepName(sourceFolder),
 					is_section: false,
 				});
+			} else {
+				console.error(`Unknown Gitorial Commit Type: ${commitMessage}`)
 			}
 			// Create a Markdown file in the commit folder
 			const markdownFilePath = path.join(stepFolder, "README.md");
