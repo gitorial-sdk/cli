@@ -265,6 +265,11 @@ function generateFileMarkdown(type, files) {
 			continue;
 		}
 
+		// Skip all hidden folders, like `.gitorial`.
+		if (file.file.startsWith(".")) {
+			continue;
+		}
+
 		let filepath = `./${type}/${file.file}`;
 		let filename = path.parse(filepath).base;
 
