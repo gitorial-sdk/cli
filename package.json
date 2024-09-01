@@ -1,6 +1,6 @@
 {
   "name": "gitorial-cli",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "CLI Tools for Creating and Managing a Gitorial",
   "main": "src/index.js",
   "bin": "src/index.js",
@@ -20,5 +20,8 @@
   "dependencies": {
     "commander": "^12.0.0",
     "simple-git": "^3.24.0"
-  }
+  },
+  "files": [
+    "src/*"
+  ]
 }

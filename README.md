@@ -2,6 +2,14 @@
 
 The gitorial-cli is a CLI tool for helping manage and work with a Git repo following the [Gitorial format](https://github.com/gitorial-sdk).
 
+## Install
+
+Install this CLI via NPM:
+
+```sh
+npm install -g gitorial-cli
+```
+
 ## Commands
 
 The CLI exposes various commands for managing a Gitorial.
@@ -31,7 +39,7 @@ Options:
 Example: Convert an Gitorial repository from branch `gitorial` into branch `master` as an unpacked set of numbered steps in a folder named `steps`.
 
 ```sh
-gitorial-cli unpack -p /path/to/rust-state-machine -i gitorial -o master -s steps
+gitorial-cli unpack -p /path/to/project -i gitorial -o master -s steps
 ```
 
 Output:
@@ -64,7 +72,7 @@ Options:
 Example: Convert an "unpacked" Gitorial on branch `master` in folder `steps` to a branch `gitorial`
 
 ```sh
-gitorial-cli repack -p /path/to/rust-state-machine -i master -s steps -o gitorial
+gitorial-cli repack -p /path/to/project -i master -s steps -o gitorial
 ```
 
 ### mdBook
@@ -85,5 +93,5 @@ Options:
 Example: Convert a Gitorial at branch `gitorial` to an [mdBook](https://rust-lang.github.io/mdBook/) rendered at branch `mdbook`.
 
 ```sh
-gitorial-cli mdbook -p /path/to/rust-state-machine -i gitorial -o mdbook
+gitorial-cli mdbook -p /path/to/project -i gitorial -o mdbook
 ```
