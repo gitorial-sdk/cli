@@ -297,10 +297,24 @@ function generateFileMarkdown(type, files) {
 
 		let codeStyle = "text";
 		let extname = path.extname(filepath);
-		if (extname == ".rs") {
-			codeStyle = "rust";
-		} else if (extname == ".toml") {
-			codeStyle = "toml";
+		switch (extname) {
+			case ".rs":
+				codeStyle = "rust";
+				break;
+			case ".toml":
+				codeStyle = "toml";
+				break;
+			case ".js":
+				codeStyle = "js";
+				break;
+			case ".json":
+				codeStyle = "json";
+				break;
+			case ".ts":
+				codeStyle = "ts";
+				break;
+			default:
+				codeStyle = "text";
 		}
 
 		parsedFiles.push({ filename: file.file, classStyle, codeStyle, filepath })
