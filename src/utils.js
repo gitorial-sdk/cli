@@ -63,6 +63,43 @@ function copyFilesAndDirectories(source, target) {
 	});
 }
 
+function clearWorkingTree(targetDir, preserveNames = ['.git']) {
+	if (!fs.existsSync(targetDir)) {
+		return;
+	}
+
+	const items = fs.readdirSync(targetDir);
+	items.forEach(item => {
+		if (preserveNames.includes(item)) {
+			return;
+		}
+		fs.rmSync(path.join(targetDir, item), { recursive: true, force: true });
+	});
+}
+
+function copyDirectoryWithFilter(sourceDir, targetDir, shouldSkip) {
+	// Create target directory if it doesn't exist
+	if (!fs.existsSync(targetDir)) {
+		fs.mkdirSync(targetDir, { recursive: true });
+	}
+
+	const items = fs.readdirSync(sourceDir);
+	items.forEach(item => {
+		const sourcePath = path.join(sourceDir, item);
+		const targetPath = path.join(targetDir, item);
+		const isDirectory = fs.statSync(sourcePath).isDirectory();
+		if (shouldSkip(sourcePath, isDirectory)) {
+			return;
+		}
+		if (isDirectory) {
+			fs.mkdirSync(targetPath, { recursive: true });
+			copyDirectoryWithFilter(sourcePath, targetPath, shouldSkip);
+		} else {
+			fs.copyFileSync(sourcePath, targetPath);
+		}
+	});
+}
+
 async function doesBranchExist(git, branchName) {
 	try {
 		// Get a list of all local branches
@@ -76,4 +113,10 @@ async function doesBranchExist(git, branchName) {
 	}
 }
 
-module.exports = { copyAllContentsAndReplace, doesBranchExist, copyFilesAndDirectories };
+module.exports = {
+	copyAllContentsAndReplace,
+	clearWorkingTree,
+	copyDirectoryWithFilter,
+	doesBranchExist,
+	copyFilesAndDirectories
+};

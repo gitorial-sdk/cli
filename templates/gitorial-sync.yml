@@ -1,0 +1,33 @@
+name: Sync Gitorial Branch
+
+on:
+  push:
+    branches:
+      - master
+
+permissions:
+  contents: write
+
+jobs:
+  sync-gitorial:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+
+      - name: Install gitorial-cli
+        run: npm install -g gitorial-cli
+
+      - name: Generate gitorial branch
+        run: gitorial-cli repack-mdbook -p . -i master -o gitorial --force
+
+      - name: Push gitorial branch
+        run: |
+          git push origin gitorial --force

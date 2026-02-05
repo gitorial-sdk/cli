@@ -32,6 +32,19 @@ program
 		require('./repack')(path, inputBranch, outputBranch, subFolder, force);
 	});
 
+// Command to create a gitorial branch from an mdBook workshop layout.
+program
+	.command('repack-mdbook')
+	.description('Create a Gitorial from an mdBook workshop layout. Must repack into a new branch unless --force is used.')
+	.requiredOption('-p, --path <path>', 'The local path for the git repo containing the tutorial.')
+	.requiredOption('-i, --inputBranch <inputBranch>', 'The branch in the repo with the mdBook workshop.')
+	.requiredOption('-o, --outputBranch <outputBranch>', 'The branch where you want to create the Gitorial. Branch must not exist.')
+	.option('-s, --subFolder <subFolder>', 'The subfolder (relative to the <path>) where you can find the mdBook source', 'src')
+	.option('--force', 'Force the repack, even if it would replace an existing branch. WARNING: this can delete the branch history!')
+	.action(({ path, inputBranch, outputBranch, subFolder, force }) => {
+		require('./repack_mdbook')(path, inputBranch, outputBranch, subFolder, force);
+	});
+
 // Command to scaffold an mdBook source from a Gitorial.
 program
 	.command('mdbook')
