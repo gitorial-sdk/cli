@@ -1,3 +1,4 @@
+
 (function () {
   function loadJson(url) {
     return fetch(url).then((res) => {
@@ -144,6 +145,7 @@
     const manifestUrl = container.dataset.manifest;
     const config = await loadJson(manifestUrl);
 
+    const toolbar = container.querySelector('[data-gitorial-toolbar]');
     const select = container.querySelector('[data-gitorial-files]');
     const toggle = container.querySelector('[data-gitorial-toggle]');
     const diffToggle = container.querySelector('[data-gitorial-diff]');
@@ -151,7 +153,6 @@
     const editorNode = container.querySelector('[data-gitorial-editor]');
     const iframe = buildIframe();
     editorNode.appendChild(iframe);
-
     let iframeReady = false;
     let pendingPayload = null;
 
@@ -171,8 +172,8 @@
 
     if (!solutionFiles.length) {
       toggle.style.display = 'none';
-      diffToggle.style.display = 'none';
       footer.textContent = 'Template view only.';
+      diffToggle.style.display = 'none';
     } else {
       footer.textContent = 'Template view. Click View solution to compare.';
     }
@@ -191,7 +192,7 @@
       } else {
         marker = '[ ]';
       }
-      return `${marker} ${file.label}`;
+      return marker + ' ' + file.label;
     }
 
     function updateFileOptions() {
@@ -266,11 +267,14 @@
       await postToIframe({ type: 'set', content, language });
     }
 
+    function currentFiles() {
+      return currentMode === 'template' ? templateFiles : solutionFiles;
+    }
+
     updateFileOptions();
     if (!select.value) {
       footer.textContent = 'No files available for this step.';
       toggle.style.display = 'none';
-      diffToggle.style.display = 'none';
       return;
     }
     selectedLabel = select.value;
@@ -282,13 +286,14 @@
     });
 
     toggle.addEventListener('click', async () => {
-      if (!solutionFiles.length || currentMode === 'diff') {
+      if (!solutionFiles.length) {
         return;
       }
       currentMode = currentMode === 'template' ? 'solution' : 'template';
       updateFileOptions();
       setButtonState(toggle, currentMode === 'template');
       toggle.textContent = currentMode === 'template' ? 'View solution' : 'Back to template';
+      toggle.disabled = currentMode === 'diff';
       footer.textContent =
         currentMode === 'template'
           ? 'Template view. Click View solution to compare.'

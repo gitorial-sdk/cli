@@ -1,21 +1,5 @@
 {
-  "template": [
-    {
-      "label": "src/main.rs",
-      "path": "./template/src/main.rs",
-      "status": "M"
-    },
-    {
-      "label": "src/profile.rs",
-      "path": "./template/src/profile.rs",
-      "status": "A"
-    },
-    {
-      "label": "src/user.rs",
-      "path": "./template/src/user.rs",
-      "status": "M"
-    }
-  ],
+  "template": [],
   "solution": [
     {
       "label": "src/main.rs",
@@ -25,7 +9,7 @@
     {
       "label": "src/profile.rs",
       "path": "./solution/src/profile.rs",
-      "status": "A"
+      "status": "M"
     },
     {
       "label": "src/user.rs",

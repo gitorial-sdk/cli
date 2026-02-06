@@ -1,16 +1,5 @@
 {
-  "template": [
-    {
-      "label": "src/main.rs",
-      "path": "./template/src/main.rs",
-      "status": "M"
-    },
-    {
-      "label": "src/user.rs",
-      "path": "./template/src/user.rs",
-      "status": "A"
-    }
-  ],
+  "template": [],
   "solution": [
     {
       "label": "src/main.rs",
@@ -20,7 +9,7 @@
     {
       "label": "src/user.rs",
       "path": "./solution/src/user.rs",
-      "status": "A"
+      "status": "M"
     }
   ]
 }
