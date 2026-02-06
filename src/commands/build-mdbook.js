@@ -2,7 +2,7 @@ const fs = require('fs');
 const os = require('os');
 const path = require('path');
 const { createLogger } = require('../lib/logger');
-const { createGit, ensureBranchExists, createOrphanBranch } = require('../lib/git');
+const { createGit, ensureBranchExists, checkoutBranch } = require('../lib/git');
 const {
 	copyDir,
 	ensureDir,
@@ -103,6 +103,16 @@ function copySnapshot(sourceDir, targetDir) {
 	copyDir(sourceDir, targetDir, filter);
 }
 
+async function checkoutOrCreateBranch(git, outputBranch, baseBranch) {
+	const branches = await git.branchLocal();
+	if (branches.all.includes(outputBranch)) {
+		await checkoutBranch(git, outputBranch);
+		return;
+	}
+	await checkoutBranch(git, baseBranch);
+	await git.checkoutLocalBranch(outputBranch);
+}
+
 async function buildMdbook(options) {
 	const logger = createLogger(options);
 	const repoPath = path.resolve(options.repo);
@@ -123,18 +133,18 @@ async function buildMdbook(options) {
 		const logs = await sourceGit.log();
 		const commits = logs.all.reverse();
 
-		await createOrphanBranch(git, outputBranch, {
-			force: options.force,
-			fromBranch: inputBranch,
-		});
+		await checkoutOrCreateBranch(git, outputBranch, inputBranch);
+		if (options.force) {
+			logger.warn('--force is ignored for build-mdbook to preserve branch history.');
+		}
 
-	const outputRoot = path.join(repoPath, sourceDirName);
-	removeAllExcept(repoPath, ['.git']);
-	ensureDir(outputRoot);
-	const assetRoot = path.join(outputRoot, '_gitorial');
-	ensureDir(assetRoot);
-	fs.writeFileSync(path.join(assetRoot, 'monaco-setup.js'), monacoSetup);
-	fs.writeFileSync(path.join(assetRoot, 'monaco-setup.css'), monacoCss);
+		const outputRoot = path.join(repoPath, sourceDirName);
+		ensureDir(outputRoot);
+		removeAllExcept(outputRoot, []);
+		const assetRoot = path.join(outputRoot, '_gitorial');
+		ensureDir(assetRoot);
+		fs.writeFileSync(path.join(assetRoot, 'monaco-setup.js'), monacoSetup);
+		fs.writeFileSync(path.join(assetRoot, 'monaco-setup.css'), monacoCss);
 
 		let stepCounter = 0;
 		let pendingTemplate = null;
@@ -261,19 +271,24 @@ async function buildMdbook(options) {
 			throw new Error('Template commit did not have a matching solution.');
 		}
 
-	const summaryPath = path.join(outputRoot, 'SUMMARY.md');
-	let summary = '# Summary\n\n';
-	stepEntries.forEach((entry, index) => {
-		if (!entry.isSection) {
-			summary += '    ';
-		}
-		summary += `- [${index}. ${entry.name}](${index}/README.md)\n`;
-	});
+		const summaryPath = path.join(outputRoot, 'SUMMARY.md');
+		let summary = '# Summary\n\n';
+		stepEntries.forEach((entry, index) => {
+			if (!entry.isSection) {
+				summary += '    ';
+			}
+			summary += `- [${index}. ${entry.name}](${index}/README.md)\n`;
+		});
 		fs.writeFileSync(summaryPath, summary);
 
-		await git.add('.');
-		await git.commit(`mdBook generated from ${inputBranch}`);
-		logger.info('mdBook branch generated successfully.');
+		await git.raw(['add', '-A', sourceDirName]);
+		const status = await git.status();
+		if (!status.isClean()) {
+			await git.commit(`mdBook generated from ${inputBranch}`);
+			logger.info('mdBook branch generated successfully.');
+		} else {
+			logger.info('No mdBook changes detected.');
+		}
 	} finally {
 		fs.rmSync(tempDir, { recursive: true, force: true });
 	}
