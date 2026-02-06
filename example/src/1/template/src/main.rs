@@ -1,19 +1,6 @@
-#[derive(Debug)]
-struct User {
-    // TODO: add fields for name and age
-}
+mod user;
 
-impl User {
-    fn new(/* TODO: params */) -> Self {
-        // TODO: build a User
-        todo!()
-    }
-
-    fn summary(&self) -> String {
-        // TODO: format a summary string
-        todo!()
-    }
-}
+use user::User;
 
 fn main() {
     let user = User::new(/* TODO */);

@@ -4,6 +4,11 @@
       "label": "src/main.rs",
       "path": "./template/src/main.rs",
       "status": "M"
+    },
+    {
+      "label": "src/user.rs",
+      "path": "./template/src/user.rs",
+      "status": "A"
     }
   ],
   "solution": [
@@ -11,6 +16,11 @@
       "label": "src/main.rs",
       "path": "./solution/src/main.rs",
       "status": "M"
+    },
+    {
+      "label": "src/user.rs",
+      "path": "./solution/src/user.rs",
+      "status": "A"
     }
   ]
 }

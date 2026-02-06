@@ -193,7 +193,14 @@ async function buildMdbook(options) {
 			const manifestPath = path.join(stepFolder, 'files.json');
 			fs.writeFileSync(
 				manifestPath,
-				JSON.stringify({ template: templateEntries, solution: solutionEntries }, null, 2)
+				JSON.stringify(
+					{
+						template: templateEntries,
+						solution: solutionEntries,
+					},
+					null,
+					2
+				)
 			);
 
 			let markdown = stepMarkdown;
