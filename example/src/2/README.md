@@ -1,8 +1,11 @@
 <div class="gitorial-step">
 <div class="gitorial-step-text">
+
 {{#include ./template/README.md}}
+
 </div>
 <div class="gitorial-step-editor">
+
 <link rel="stylesheet" href="../_gitorial/monaco-setup.css">
 <script src="../_gitorial/monaco-setup.js"></script>
 
@@ -22,5 +25,6 @@ if (window.__gitorialBoot) {
   window.__gitorialBoot();
 }
 </script>
+
 </div>
 </div>
