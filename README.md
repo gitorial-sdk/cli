@@ -1,10 +1,17 @@
-# cli
+# gitorial-cli
 
-The gitorial-cli is a CLI tool for helping manage and work with a Git repo following the [Gitorial format](https://github.com/gitorial-sdk).
+Tools for building step-by-step tutorials that are easy to contribute to and easy to render as clean, commit-based Gitorials.
+
+## Design
+
+This CLI is optimized for open-source tutorials:
+
+- `master` is the public, editable mdBook workshop branch.
+- `gitorial` is a generated branch with clean, tutorial-grade commits.
+
+Contributors work on `master`. Maintainers or CI regenerate `gitorial`.
 
 ## Install
-
-Install this CLI via NPM:
 
 ```sh
 npm install -g gitorial-cli
@@ -12,86 +19,105 @@ npm install -g gitorial-cli
 
 ## Commands
 
-The CLI exposes various commands for managing a Gitorial.
-
 ```sh
 Commands:
-  unpack [options]  Unpack a Gitorial into another branch.
-  repack [options]  Create a repacked Gitorial from an unpacked Gitorial. Must repack into a new branch.
-  mdbook [options]  Scaffold the contents of a Gitorial in a new branch in the mdBook source format. You need to initialize an mdBook yourself
+  build-gitorial [options]  Generate a gitorial branch from an mdBook workshop branch.
+  build-mdbook [options]    Generate an mdBook workshop branch from a gitorial branch.
 ```
 
-### unpack
+### build-gitorial
+
+Generate the `gitorial` branch from the mdBook workshop on `master`.
 
 ```sh
-Usage: index unpack [options]
-
-Unpack a Gitorial into another branch.
+gitorial-cli build-gitorial -r /path/to/project -i master -o gitorial
+```
 
 Options:
-  -p, --path <path>                  The local path for the git repo containing the Gitorial.
-  -i, --inputBranch <inputBranch>    The branch in the repo with the Gitorial.
-  -o, --outputBranch <outputBranch>  The branch where you want to unpack the Gitorial.
-  -s, --subFolder <subFolder>        The subfolder (relative to the <path>) where you want the unpacked Gitorial to be placed.
-  -h, --help                         display help for command
-```
 
-Example: Convert an Gitorial repository from branch `gitorial` into branch `master` as an unpacked set of numbered steps in a folder named `steps`.
+- `-r, --repo <path>`: path to the repo (default: current directory)
+- `-i, --input <branch>`: workshop branch (default: `master`)
+- `-o, --output <branch>`: gitorial branch (default: `gitorial`)
+- `-s, --source <dir>`: mdBook source dir (default: `src`)
+- `--force`: replace output branch if it exists
+- `--verbose`: verbose logging
 
-```sh
-gitorial-cli unpack -p /path/to/project -i gitorial -o master -s steps
-```
+### build-mdbook
 
-Output:
+Generate an mdBook workshop branch from a gitorial branch.
 
 ```sh
-# git branch: master
-steps/
-├─ 0/
-├─ 1/
-├─ 2/
-├─ ...
+gitorial-cli build-mdbook -r /path/to/project -i gitorial -o master
 ```
-
-### repack
-
-```sh
-Usage: index repack [options]
-
-Create a repacked Gitorial from an unpacked Gitorial. Must repack into a new branch.
 
 Options:
-  -p, --path <path>                  The local path for the git repo containing the Gitorial.
-  -i, --inputBranch <inputBranch>    The branch in the repo with the unpacked Gitorial.
-  -o, --outputBranch <outputBranch>  The branch where you want to repack the Gitorial. Branch must not exist.
-  -s, --subFolder <subFolder>        The subfolder (relative to the <path>) where you can find the unpacked Gitorial
-  --force                            Force the repack, even if it would replace an existing branch. WARNING: this can delete the branch history!
-  -h, --help                         display help for command
+
+- `-r, --repo <path>`: path to the repo (default: current directory)
+- `-i, --input <branch>`: gitorial branch (default: `gitorial`)
+- `-o, --output <branch>`: workshop branch (default: `master`)
+- `-s, --source <dir>`: mdBook source dir (default: `src`)
+- `--force`: replace output branch if it exists
+- `--verbose`: verbose logging
+
+## mdBook Layout Expectations
+
+The workshop branch is expected to be an mdBook source layout with numbered steps and a single markdown page per step:
+
+```
+src/
+  0/
+    README.md
+    source/
+      README.md
+  1/
+    README.md
+    template/
+      README.md
+    solution/
+      README.md
+  2/
+    README.md
+    source/
+      README.md
 ```
 
-Example: Convert an "unpacked" Gitorial on branch `master` in folder `steps` to a branch `gitorial`
+Each step folder may contain:
 
-```sh
-gitorial-cli repack -p /path/to/project -i master -s steps -o gitorial
+- `source/` for a single-step change
+- `template/` and `solution/` for TODO + solution steps
+- `README.md` only for section-only steps (no code folder)
+
+Each step `README.md` is generated to include a Monaco editor with a "View solution" toggle.
+The CLI writes shared Monaco assets to `src/_gitorial/`.
+
+The CLI uses the first `# Heading` in the step README as the step title, sourced from:
+- `template/README.md` for template/solution steps
+- `source/README.md` for action/section steps
+- `README.md` for section-only steps
+
+## Gitorial Types
+
+You can declare explicit step type with a hidden HTML comment in markdown:
+
+```md
+<!-- gitorial: action -->
 ```
 
-### mdBook
+Supported types:
 
-```sh
-Usage: index mdbook [options]
+- `section`: Introductory step. Usually `N/README.md` only.
+- `action`: Non-template operational step in `N/source/README.md`.
+- `template`: TODO state in `N/template/README.md`.
+- `solution`: Final working state in `N/solution/README.md`.
 
-Scaffold the contents of a Gitorial in a new branch in the mdBook source format. You need to initialize an mdBook yourself
+## CI Pipeline (Template)
 
-Options:
-  -p, --path <path>                  The local path for the git repo containing the Gitorial.
-  -i, --inputBranch <inputBranch>    The branch in the repo with the Gitorial.
-  -o, --outputBranch <outputBranch>  The branch where you want your mdBook to live
-  -s, --subFolder <subFolder>        The subfolder (relative to the <path>) where you want the mdBook source material to be placed. (default: "src")
-  -h, --help                         display help for command
-```
+There is a ready-to-copy GitHub Actions workflow at `templates/gitorial-sync.yml` that:
 
-Example: Convert a Gitorial at branch `gitorial` to an [mdBook](https://rust-lang.github.io/mdBook/) rendered at branch `mdbook`.
+- Runs on pushes to `master`
+- Regenerates `gitorial`
+- Force-pushes `gitorial` back to the repo
 
-```sh
-gitorial-cli mdbook -p /path/to/project -i gitorial -o mdbook
-```
+## Contributing
+
+Edit content in `master`. Do not edit `gitorial` directly.
