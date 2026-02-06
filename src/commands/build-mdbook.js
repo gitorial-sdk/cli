@@ -170,8 +170,7 @@ async function buildMdbook(options) {
 				if (pendingTemplate) {
 					throw new Error('Found a template commit before completing a solution.');
 				}
-				pendingTemplate = { ...commit };
-				previousCommit = commitHash;
+				pendingTemplate = { ...commit, baseCommit: previousCommit };
 				continue;
 			}
 
@@ -190,37 +189,41 @@ async function buildMdbook(options) {
 				await sourceGit.checkout(pendingTemplate.hash);
 				copySnapshot(tempDir, templateFolder);
 
-			const templateDiff = await sourceGit.diff(['--name-status', previousCommit, pendingTemplate.hash]);
+				const templateDiff = await sourceGit.diff([
+					'--name-status',
+					pendingTemplate.baseCommit,
+					pendingTemplate.hash,
+				]);
 
 				await sourceGit.checkout(commitHash);
 				copySnapshot(tempDir, solutionFolder);
 
-			const solutionDiff = await sourceGit.diff(['--name-status', pendingTemplate.hash, commitHash]);
+				const solutionDiff = await sourceGit.diff(['--name-status', pendingTemplate.hash, commitHash]);
 
-			const templateEntries = filterFileEntries(parseFileStatuses(templateDiff), 'template');
-			const solutionEntries = filterFileEntries(parseFileStatuses(solutionDiff), 'solution');
+				const templateEntries = filterFileEntries(parseFileStatuses(templateDiff), 'template');
+				const solutionEntries = filterFileEntries(parseFileStatuses(solutionDiff), 'solution');
 
-			const manifestPath = path.join(stepFolder, 'files.json');
-			fs.writeFileSync(
-				manifestPath,
-				JSON.stringify(
-					{
-						template: templateEntries,
-						solution: solutionEntries,
-					},
-					null,
-					2
-				)
-			);
+				const manifestPath = path.join(stepFolder, 'files.json');
+				fs.writeFileSync(
+					manifestPath,
+					JSON.stringify(
+						{
+							template: templateEntries,
+							solution: solutionEntries,
+						},
+						null,
+						2
+					)
+				);
 
-			let markdown = stepMarkdown;
-			markdown = markdown.replace('<!-- insert_step_readme -->', './template/README.md');
-			markdown = markdown.replace(
-				'<!-- insert_monaco -->',
-				monacoEmbed('../_gitorial', './files.json')
-			);
+				let markdown = stepMarkdown;
+				markdown = markdown.replace('<!-- insert_step_readme -->', './template/README.md');
+				markdown = markdown.replace(
+					'<!-- insert_monaco -->',
+					monacoEmbed('../_gitorial', './files.json')
+				);
 
-			fs.writeFileSync(path.join(stepFolder, 'README.md'), markdown);
+				fs.writeFileSync(path.join(stepFolder, 'README.md'), markdown);
 
 				const stepTitle = getStepTitle(templateFolder);
 				stepEntries.push({ name: stepTitle, isSection: false });
@@ -233,6 +236,27 @@ async function buildMdbook(options) {
 
 			if (pendingTemplate) {
 				throw new Error('Template commit must be followed by a solution commit.');
+			}
+
+			if (commitType === 'section' || commitType === 'readme') {
+				const stepFolder = path.join(outputRoot, stepCounter.toString());
+				ensureDir(stepFolder);
+
+				await sourceGit.checkout(commitHash);
+
+				const sourceReadme = path.join(tempDir, 'README.md');
+				if (!fs.existsSync(sourceReadme)) {
+					throw new Error(`Section/readme commit ${commitHash} is missing README.md`);
+				}
+
+				fs.copyFileSync(sourceReadme, path.join(stepFolder, 'README.md'));
+
+				const stepTitle = getStepTitle(stepFolder);
+				stepEntries.push({ name: stepTitle, isSection: true });
+
+				stepCounter += 1;
+				previousCommit = commitHash;
+				continue;
 			}
 
 			const stepFolder = path.join(outputRoot, stepCounter.toString());
@@ -261,7 +285,7 @@ async function buildMdbook(options) {
 			fs.writeFileSync(path.join(stepFolder, 'README.md'), markdown);
 
 			const stepTitle = getStepTitle(sourceFolder);
-			stepEntries.push({ name: stepTitle, isSection: commitType === 'section' || commitType === 'readme' });
+			stepEntries.push({ name: stepTitle, isSection: false });
 
 			stepCounter += 1;
 			previousCommit = commitHash;
