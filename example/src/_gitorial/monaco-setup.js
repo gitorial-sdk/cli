@@ -177,13 +177,33 @@
       footer.textContent = 'Template view. Click View solution to compare.';
     }
 
+    function formatOptionLabel(file) {
+      if (!file) {
+        return '';
+      }
+      let marker = '';
+      if (file.status === 'A') {
+        marker = '[+]';
+      } else if (file.status === 'M') {
+        marker = '[~]';
+      } else if (file.status === 'D') {
+        marker = '[-]';
+      } else {
+        marker = '[ ]';
+      }
+      return `${marker} ${file.label}`;
+    }
+
     function updateFileOptions() {
       let list = currentMode === 'template' ? templateFiles : solutionFiles;
       if (currentMode === 'diff') {
         const byLabel = new Map();
         templateFiles.forEach((file) => byLabel.set(file.label, file));
         solutionFiles.forEach((file) => {
-          if (!byLabel.has(file.label)) {
+          if (byLabel.has(file.label)) {
+            const existing = byLabel.get(file.label);
+            byLabel.set(file.label, { ...existing, status: file.status || existing.status });
+          } else {
             byLabel.set(file.label, file);
           }
         });
@@ -193,7 +213,7 @@
       list.forEach((file, index) => {
         const option = document.createElement('option');
         option.value = file.label;
-        option.textContent = file.label;
+        option.textContent = formatOptionLabel(file);
         if (selectedLabel && selectedLabel === file.label) {
           option.selected = true;
         } else if (!selectedLabel && index === 0) {
