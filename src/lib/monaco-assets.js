@@ -371,7 +371,7 @@ const monacoSetup = `
       } else {
         marker = '[ ]';
       }
-      return `${marker} ${file.label}`;
+      return marker + ' ' + file.label;
     }
 
     function updateFileOptions() {

@@ -1,0 +1,47 @@
+name: Sync Gitorial Branch
+
+on:
+  push:
+    branches:
+      - master
+    paths:
+      - 'example/**'
+      - 'src/**'
+      - 'package.json'
+      - 'yarn.lock'
+      - '.github/workflows/sync-gitorial.yml'
+
+permissions:
+  contents: write
+
+concurrency:
+  group: gitorial-sync
+  cancel-in-progress: true
+
+jobs:
+  sync:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+
+      - name: Install dependencies
+        run: npm install
+
+      - name: Configure git author
+        run: |
+          git config user.name "gitorial-bot"
+          git config user.email "gitorial-bot@users.noreply.github.com"
+
+      - name: Build gitorial branch from example book source
+        run: node src/index.js build-gitorial -r . -i master -o gitorial -s example/src --force
+
+      - name: Push gitorial
+        run: git push origin gitorial --force
