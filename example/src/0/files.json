@@ -1,0 +1,10 @@
+{
+  "template": [
+    {
+      "label": "src/main.rs",
+      "path": "./source/src/main.rs",
+      "status": "A"
+    }
+  ],
+  "solution": []
+}

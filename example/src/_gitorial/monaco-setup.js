@@ -1,126 +1,3 @@
-const monacoCss = `
-:root {
-  --content-max-width: 100% !important;
-}
-
-.page {
-  max-width: none;
-}
-
-.content {
-  max-width: none;
-  padding: 0;
-}
-
-.gitorial-step {
-  display: grid;
-  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
-  gap: 10px;
-  align-items: stretch;
-}
-
-.gitorial-step-text,
-.gitorial-step-editor {
-  width: 100%;
-  padding: 0 5px 50px 5px;
-}
-
-.gitorial-step-text h1,
-.gitorial-step-text h2,
-.gitorial-step-text h3 {
-  margin-top: 1.4em;
-}
-
-.gitorial-step-text p {
-  line-height: 1.6;
-}
-
-.gitorial-monaco {
-  margin-top: 0;
-  border: 1px solid #d9d9d9;
-  border-radius: 12px;
-  overflow: hidden;
-  background: #0f0f10;
-}
-
-.gitorial-monaco-toolbar {
-  display: flex;
-  gap: 12px;
-  align-items: center;
-  padding: 12px 16px;
-  background: #1b1b1d;
-  border-bottom: 1px solid #2a2a2d;
-  color: #f0f0f2;
-  font-family: "Inter", system-ui, sans-serif;
-}
-
-.gitorial-monaco-toolbar .label {
-  font-size: 12px;
-  opacity: 0.8;
-}
-
-.gitorial-monaco-toolbar .file-select {
-  background: #2b2b2f;
-  color: #f0f0f2;
-  border: 1px solid #3a3a3f;
-  border-radius: 6px;
-  padding: 6px 8px;
-  font-size: 12px;
-}
-
-.gitorial-monaco-toolbar .toggle {
-  margin-left: auto;
-  background: #f0f0f2;
-  color: #1b1b1d;
-  border: none;
-  border-radius: 999px;
-  padding: 6px 12px;
-  font-size: 12px;
-  cursor: pointer;
-}
-
-.gitorial-monaco-toolbar .toggle.secondary {
-  background: transparent;
-  color: #f0f0f2;
-  border: 1px solid #3a3a3f;
-}
-
-.gitorial-monaco-editor {
-  height: calc(100vh - 220px);
-  min-height: 520px;
-}
-
-.gitorial-monaco-footer {
-  padding: 10px 16px;
-  background: #1b1b1d;
-  border-top: 1px solid #2a2a2d;
-  font-size: 12px;
-  color: #b7b7c0;
-  font-family: "Inter", system-ui, sans-serif;
-}
-
-@media screen and (min-width: 1081px) {
-  .gitorial-step-text,
-  .gitorial-step-editor {
-    height: calc(100vh - 102px);
-    overflow: auto;
-  }
-}
-
-@media (max-width: 980px) {
-  .gitorial-step {
-    grid-template-columns: 1fr;
-  }
-
-  .gitorial-step-text,
-  .gitorial-step-editor {
-    height: auto;
-    overflow: visible;
-  }
-}
-`;
-
-const monacoSetup = `
 (function () {
   function loadJson(url) {
     return fetch(url).then((res) => {
@@ -164,7 +41,7 @@ const monacoSetup = `
     iframe.style.height = '100%';
     iframe.style.border = '0';
     iframe.style.display = 'block';
-    iframe.srcdoc = \`
+    iframe.srcdoc = `
 <!doctype html>
 <html>
   <head>
@@ -207,7 +84,7 @@ const monacoSetup = `
       });
     </script>
   </body>
-</html>\`;
+</html>`;
     return iframe;
   }
 
@@ -215,13 +92,13 @@ const monacoSetup = `
     const manifestUrl = container.dataset.manifest;
     const config = await loadJson(manifestUrl);
 
-    const toolbar = container.querySelector('[data-gitorial-toolbar]');
     const select = container.querySelector('[data-gitorial-files]');
     const toggle = container.querySelector('[data-gitorial-toggle]');
     const footer = container.querySelector('[data-gitorial-footer]');
     const editorNode = container.querySelector('[data-gitorial-editor]');
     const iframe = buildIframe();
     editorNode.appendChild(iframe);
+
     let iframeReady = false;
     let pendingPayload = null;
 
@@ -273,10 +150,6 @@ const monacoSetup = `
       }
     }
 
-    function currentFiles() {
-      return currentMode === 'template' ? templateFiles : solutionFiles;
-    }
-
     updateFileOptions();
     if (!select.value) {
       footer.textContent = 'No files available for this step.';
@@ -321,31 +194,3 @@ const monacoSetup = `
 
   window.__gitorialBoot = boot;
 })();
-`;
-
-const monacoEmbed = (relativeAssetBase, manifestPath) => `
-<link rel="stylesheet" href="${relativeAssetBase}/monaco-setup.css">
-<script src="${relativeAssetBase}/monaco-setup.js"></script>
-
-<div class="gitorial-monaco" data-gitorial-monaco data-manifest="${manifestPath}">
-  <div class="gitorial-monaco-toolbar" data-gitorial-toolbar>
-    <span class="label">File</span>
-    <select class="file-select" data-gitorial-files></select>
-    <button class="toggle" data-gitorial-toggle>View solution</button>
-  </div>
-  <div class="gitorial-monaco-editor" data-gitorial-editor></div>
-  <div class="gitorial-monaco-footer" data-gitorial-footer></div>
-</div>
-
-<script>
-  if (window.__gitorialBoot) {
-    window.__gitorialBoot();
-  }
-</script>
-`;
-
-module.exports = {
-	monacoCss,
-	monacoSetup,
-	monacoEmbed,
-};
