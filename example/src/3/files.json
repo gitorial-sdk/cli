@@ -1,5 +1,21 @@
 {
-  "template": [],
+  "template": [
+    {
+      "label": "src/main.rs",
+      "path": "./template/src/main.rs",
+      "status": "M"
+    },
+    {
+      "label": "src/profile.rs",
+      "path": "./template/src/profile.rs",
+      "status": "A"
+    },
+    {
+      "label": "src/user.rs",
+      "path": "./template/src/user.rs",
+      "status": "M"
+    }
+  ],
   "solution": [
     {
       "label": "src/main.rs",

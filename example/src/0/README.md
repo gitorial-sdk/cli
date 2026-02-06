@@ -1,33 +1,15 @@
+<!-- gitorial: section -->
 
-<div class="gitorial-step">
-<div class="gitorial-step-text">
+# Gitorial Example
 
-{{#include ./source/README.md}}
+Gitorial is a tutorial format built on top of Git history.
 
-</div>
-<div class="gitorial-step-editor">
+Each learning step is represented as a meaningful change, so code evolution stays explicit and reviewable.
 
+In this example:
 
-<link rel="stylesheet" href="../_gitorial/monaco-setup.css">
-<script src="../_gitorial/monaco-setup.js"></script>
+- `template` shows TODO-driven starter code
+- `solution` shows the completed step
+- `section` pages provide context without code snapshots
 
-<div class="gitorial-monaco" data-gitorial-monaco data-manifest="./files.json">
-  <div class="gitorial-monaco-toolbar" data-gitorial-toolbar>
-    <span class="label">File</span>
-    <select class="file-select" data-gitorial-files></select>
-    <button class="toggle" data-gitorial-toggle>View solution</button>
-    <button class="diff-toggle" data-gitorial-diff>View diff</button>
-  </div>
-  <div class="gitorial-monaco-editor" data-gitorial-editor></div>
-  <div class="gitorial-monaco-footer" data-gitorial-footer></div>
-</div>
-
-<script>
-  if (window.__gitorialBoot) {
-    window.__gitorialBoot();
-  }
-</script>
-
-
-</div>
-</div>
+Continue to Step 1 to start the Rust walkthrough.
