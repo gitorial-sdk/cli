@@ -3,6 +3,16 @@ const monacoCss = `
   --content-max-width: 100% !important;
 }
 
+.nav-chapters {
+  top: auto;
+  margin: 10px;
+  font-size: 2.5em;
+  text-align: center;
+  text-decoration: none;
+  width: 90px;
+  border-radius: 5px;
+}
+
 .page {
   max-width: none;
 }
