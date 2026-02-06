@@ -3,7 +3,9 @@
   "version": "2.0.0",
   "description": "CLI tools for building and maintaining Gitorial tutorials",
   "main": "src/index.js",
-  "bin": "src/index.js",
+  "bin": {
+    "gitorial-cli": "src/index.js"
+  },
   "scripts": {
     "start": "node src/index.js"
   },
