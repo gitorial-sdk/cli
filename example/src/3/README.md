@@ -1,7 +1,7 @@
 <div class="gitorial-step">
 <div class="gitorial-step-text">
 
-{{#include ./source/README.md}}
+{{#include ./template/README.md}}
 
 </div>
 <div class="gitorial-step-editor">

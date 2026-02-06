@@ -1,4 +1,4 @@
-# Step 0: Project Overview
+# Project Overview
 
 In this tutorial we will build a tiny Rust app using a few structs and methods.
 

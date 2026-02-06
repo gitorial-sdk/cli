@@ -6,9 +6,14 @@
       "status": "M"
     },
     {
+      "label": "src/profile.rs",
+      "path": "./template/src/profile.rs",
+      "status": "A"
+    },
+    {
       "label": "src/user.rs",
       "path": "./template/src/user.rs",
-      "status": "A"
+      "status": "M"
     }
   ],
   "solution": [
@@ -18,9 +23,14 @@
       "status": "M"
     },
     {
+      "label": "src/profile.rs",
+      "path": "./solution/src/profile.rs",
+      "status": "A"
+    },
+    {
       "label": "src/user.rs",
       "path": "./solution/src/user.rs",
-      "status": "A"
+      "status": "M"
     }
   ]
 }
