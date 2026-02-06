@@ -1,0 +1,9 @@
+[book]
+author = "Gitorial CLI"
+title = "Example Tutorial"
+
+[build]
+build-dir = "book"
+
+[output.html]
+no-section-label = true

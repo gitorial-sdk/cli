@@ -25,8 +25,13 @@ jobs:
       - name: Install gitorial-cli
         run: npm install -g gitorial-cli
 
+      - name: Configure git author
+        run: |
+          git config user.name "gitorial-cli"
+          git config user.email "gitorial-cli@users.noreply.github.com"
+
       - name: Generate gitorial branch
-        run: gitorial-cli repack-mdbook -p . -i master -o gitorial --force
+        run: gitorial-cli build-gitorial -r . -i master -o gitorial --force
 
       - name: Push gitorial branch
         run: |

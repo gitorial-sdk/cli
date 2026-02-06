@@ -1,60 +1,41 @@
 #!/usr/bin/env node
 
 const { program } = require('commander');
+const { buildGitorial } = require('./commands/build-gitorial');
+const { buildMdbook } = require('./commands/build-mdbook');
 
 program
-	.version('1.0.0')
-	.description('Node.js CLI application to manage Git repositories');
+	.name('gitorial-cli')
+	.description('CLI tools for building and maintaining Gitorial tutorials')
+	.version('2.0.0');
 
-// Command to unpack a Gitorial into another branch.
 program
-	.command('unpack')
-	.description('Unpack a Gitorial into another branch.')
-	.requiredOption('-p, --path <path>', 'The local path for the git repo containing the Gitorial.')
-	.requiredOption('-i, --inputBranch <inputBranch>', 'The branch in the repo with the Gitorial.')
-	.requiredOption('-o, --outputBranch <outputBranch>', 'The branch where you want to unpack the Gitorial.')
-	.option('-s, --subFolder <subFolder>', 'The subfolder (relative to the <path>) where you want the unpacked Gitorial to be placed.')
-	.action(({ path, inputBranch, outputBranch, subFolder }) => {
-		require('./unpack')(path, inputBranch, outputBranch, subFolder);
+	.command('build-gitorial')
+	.description('Generate a gitorial branch from an mdBook workshop branch')
+	.option('-r, --repo <path>', 'Path to the tutorial repo', process.cwd())
+	.option('-i, --input <branch>', 'Input workshop branch', 'master')
+	.option('-o, --output <branch>', 'Output gitorial branch', 'gitorial')
+	.option('-s, --source <dir>', 'mdBook source directory', 'src')
+	.option('--force', 'Replace output branch if it exists', false)
+	.option('--verbose', 'Verbose logging', false)
+	.action(async (options) => {
+		await buildGitorial(options);
 	});
 
-
-// Command to create a repacked Gitorial from an unpacked Gitorial.
 program
-	.command('repack')
-	.description('Create a repacked Gitorial from an unpacked Gitorial. Must repack into a new branch.')
-	.requiredOption('-p, --path <path>', 'The local path for the git repo containing the Gitorial.')
-	.requiredOption('-i, --inputBranch <inputBranch>', 'The branch in the repo with the unpacked Gitorial.')
-	.requiredOption('-o, --outputBranch <outputBranch>', 'The branch where you want to repack the Gitorial. Branch must not exist.')
-	.option('-s, --subFolder <subFolder>', 'The subfolder (relative to the <path>) where you can find the unpacked Gitorial')
-	.option('--force', 'Force the repack, even if it would replace an existing branch. WARNING: this can delete the branch history!')
-	.action(({ path, inputBranch, outputBranch, subFolder, force }) => {
-		require('./repack')(path, inputBranch, outputBranch, subFolder, force);
+	.command('build-mdbook')
+	.description('Generate an mdBook workshop branch from a gitorial branch')
+	.option('-r, --repo <path>', 'Path to the tutorial repo', process.cwd())
+	.option('-i, --input <branch>', 'Input gitorial branch', 'gitorial')
+	.option('-o, --output <branch>', 'Output workshop branch', 'master')
+	.option('-s, --source <dir>', 'mdBook source directory', 'src')
+	.option('--force', 'Replace output branch if it exists', false)
+	.option('--verbose', 'Verbose logging', false)
+	.action(async (options) => {
+		await buildMdbook(options);
 	});
 
-// Command to create a gitorial branch from an mdBook workshop layout.
-program
-	.command('repack-mdbook')
-	.description('Create a Gitorial from an mdBook workshop layout. Must repack into a new branch unless --force is used.')
-	.requiredOption('-p, --path <path>', 'The local path for the git repo containing the tutorial.')
-	.requiredOption('-i, --inputBranch <inputBranch>', 'The branch in the repo with the mdBook workshop.')
-	.requiredOption('-o, --outputBranch <outputBranch>', 'The branch where you want to create the Gitorial. Branch must not exist.')
-	.option('-s, --subFolder <subFolder>', 'The subfolder (relative to the <path>) where you can find the mdBook source', 'src')
-	.option('--force', 'Force the repack, even if it would replace an existing branch. WARNING: this can delete the branch history!')
-	.action(({ path, inputBranch, outputBranch, subFolder, force }) => {
-		require('./repack_mdbook')(path, inputBranch, outputBranch, subFolder, force);
-	});
-
-// Command to scaffold an mdBook source from a Gitorial.
-program
-	.command('mdbook')
-	.description('Scaffold the contents of a Gitorial in a new branch in the mdBook source format. You need to initialize an mdBook yourself ')
-	.requiredOption('-p, --path <path>', 'The local path for the git repo containing the Gitorial.')
-	.requiredOption('-i, --inputBranch <inputBranch>', 'The branch in the repo with the Gitorial.')
-	.requiredOption('-o, --outputBranch <outputBranch>', 'The branch where you want your mdBook to live')
-	.option('-s, --subFolder <subFolder>', 'The subfolder (relative to the <path>) where you want the mdBook source material to be placed.', 'src')
-	.action(({ path, inputBranch, outputBranch, subFolder }) => {
-		require('./mdbook')(path, inputBranch, outputBranch, subFolder);
-	});
-
-program.parse(process.argv);
+program.parseAsync(process.argv).catch((error) => {
+	console.error(error.message || error);
+	process.exitCode = 1;
+});
