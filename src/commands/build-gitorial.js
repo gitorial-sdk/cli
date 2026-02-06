@@ -5,10 +5,10 @@ const { createLogger } = require('../lib/logger');
 const { createGit, ensureBranchExists, createOrphanBranch } = require('../lib/git');
 const {
 	copyDir,
-	ensureDir,
 	hasNonDocFiles,
 	listNumericDirs,
 	readFirstHeading,
+	readGitorialType,
 	removeAllExcept,
 } = require('../lib/fs');
 
@@ -43,6 +43,20 @@ function copySnapshot(sourceDir, repoPath) {
 	copyDir(sourceDir, repoPath, filter);
 }
 
+function resolveStepType(readmePath, defaultType) {
+	const declaredType = readGitorialType(readmePath);
+	if (!declaredType) {
+		return defaultType;
+	}
+	return declaredType;
+}
+
+function assertStepType(step, actualType, allowedTypes) {
+	if (!allowedTypes.includes(actualType)) {
+		throw new Error(`Step ${step} has unsupported gitorial type "${actualType}". Allowed: ${allowedTypes.join(', ')}`);
+	}
+}
+
 async function buildGitorial(options) {
 	const logger = createLogger(options);
 	const repoPath = path.resolve(options.repo);
@@ -75,41 +89,54 @@ async function buildGitorial(options) {
 			fromBranch: inputBranch,
 		});
 
-		for (const [index, step] of steps.entries()) {
+		for (const step of steps) {
 			const stepDir = path.join(mdbookSourceDir, step);
 			const stepTitle = getStepTitle(stepDir);
 			const templateDir = path.join(stepDir, 'template');
 			const solutionDir = path.join(stepDir, 'solution');
 			const sourceDir = path.join(stepDir, 'source');
+			const sectionReadme = path.join(stepDir, 'README.md');
 
 			const hasTemplate = fs.existsSync(templateDir);
 			const hasSolution = fs.existsSync(solutionDir);
 			const hasSource = fs.existsSync(sourceDir);
+			const hasSectionReadme = fs.existsSync(sectionReadme);
 
 			if (hasTemplate && hasSolution) {
 				logger.info(`Step ${step}: template/solution → ${stepTitle}`);
+				const templateType = resolveStepType(path.join(templateDir, 'README.md'), 'template');
+				const solutionType = resolveStepType(path.join(solutionDir, 'README.md'), 'solution');
+				assertStepType(step, templateType, ['template']);
+				assertStepType(step, solutionType, ['solution']);
+
 				copySnapshot(templateDir, repoPath);
 				await git.add('.');
-				await git.commit(`template: ${stepTitle}`);
+				await git.commit(`${templateType}: ${stepTitle}`);
 
 				copySnapshot(solutionDir, repoPath);
 				await git.add('.');
-				await git.commit(`solution: ${stepTitle}`);
+				await git.commit(`${solutionType}: ${stepTitle}`);
 				continue;
 			}
 
 			if (hasSource) {
-				logger.info(`Step ${step}: source → ${stepTitle}`);
+				logger.info(`Step ${step}: source/action → ${stepTitle}`);
+				const stepType = resolveStepType(path.join(sourceDir, 'README.md'), hasNonDocFiles(sourceDir) ? 'action' : 'section');
+				assertStepType(step, stepType, ['action', 'section']);
+
 				copySnapshot(sourceDir, repoPath);
 				await git.add('.');
+				await git.commit(`${stepType}: ${stepTitle}`);
+				continue;
+			}
 
-				const hasContent = hasNonDocFiles(sourceDir);
-				let prefix = hasContent ? 'action' : 'section';
-				if (!hasContent && index === 0) {
-					prefix = 'readme';
-				}
-
-				await git.commit(`${prefix}: ${stepTitle}`);
+			if (hasSectionReadme) {
+				const stepType = resolveStepType(sectionReadme, 'section');
+				assertStepType(step, stepType, ['section']);
+				logger.info(`Step ${step}: section → ${stepTitle}`);
+				fs.copyFileSync(sectionReadme, path.join(repoPath, 'README.md'));
+				await git.add('README.md');
+				await git.commit(`${stepType}: ${stepTitle}`);
 				continue;
 			}
 

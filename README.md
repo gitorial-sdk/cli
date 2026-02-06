@@ -85,6 +85,7 @@ Each step folder may contain:
 
 - `source/` for a single-step change
 - `template/` and `solution/` for TODO + solution steps
+- `README.md` only for section-only steps (no code folder)
 
 Each step `README.md` is generated to include a Monaco editor with a "View solution" toggle.
 The CLI writes shared Monaco assets to `src/_gitorial/`.
@@ -92,6 +93,22 @@ The CLI writes shared Monaco assets to `src/_gitorial/`.
 The CLI uses the first `# Heading` in the step README as the step title, sourced from:
 - `template/README.md` for template/solution steps
 - `source/README.md` for action/section steps
+- `README.md` for section-only steps
+
+## Gitorial Types
+
+You can declare explicit step type with a hidden HTML comment in markdown:
+
+```md
+<!-- gitorial: action -->
+```
+
+Supported types:
+
+- `section`: Introductory step. Usually `N/README.md` only.
+- `action`: Non-template operational step in `N/source/README.md`.
+- `template`: TODO state in `N/template/README.md`.
+- `solution`: Final working state in `N/solution/README.md`.
 
 ## CI Pipeline (Template)
 

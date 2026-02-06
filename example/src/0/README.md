@@ -1,4 +1,6 @@
-# 0. Gitorial Overview
+<!-- gitorial: section -->
+
+# Gitorial Example
 
 Gitorial is a tutorial format built on top of Git history.
 

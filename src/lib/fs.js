@@ -86,6 +86,21 @@ function readFirstHeading(markdownPath) {
 	return match ? match[1].trim() : null;
 }
 
+function readGitorialType(markdownPath) {
+	if (!fs.existsSync(markdownPath)) {
+		return null;
+	}
+	const content = fs.readFileSync(markdownPath, 'utf8');
+
+	// Hidden HTML comment metadata, safe for included markdown.
+	// Example: <!-- gitorial: template -->
+	const commentMatch = content.match(/<!--\s*gitorial(?:_type)?\s*:\s*([a-z-]+)\s*-->/i);
+	if (commentMatch) {
+		return commentMatch[1].toLowerCase();
+	}
+	return null;
+}
+
 module.exports = {
 	ensureDir,
 	removeAllExcept,
@@ -93,4 +108,5 @@ module.exports = {
 	listNumericDirs,
 	hasNonDocFiles,
 	readFirstHeading,
+	readGitorialType,
 };
