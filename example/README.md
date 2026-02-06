@@ -1,21 +1,20 @@
 # Example Tutorial
 
-This folder is a self-contained test fixture for the CLI.
+This folder is a test fixture for the CLI.
 
-Use it to verify mdBook generation, gitorial branch creation, and GitHub Pages deployment:
-
-```sh
-# From the repo root
-node src/index.js build-mdbook -r ./example -i gitorial -o master --force
-node src/index.js build-gitorial -r ./example -i master -o gitorial --force
-mdbook serve ./example
-```
-
-The workshop source lives in `example/src/` and follows the expected layout.
 It includes examples of all gitorial step types:
 
 - `section` in `src/0/README.md`
 - `action` in `src/1/source/README.md`
 - `template` and `solution` pairs in `src/2/*` and `src/3/*`
 
-GitHub Pages is configured via `.github/workflows/example-pages.yml` and builds the `example/` book.
+Run from the repository root:
+
+```sh
+node src/index.js build-gitorial -r . -i master -o gitorial -s example/src --force
+node src/index.js build-mdbook -r . -i gitorial -o master -s example/src
+mdbook serve ./example
+```
+
+GitHub Pages for this example is configured in `.github/workflows/example-pages.yml`.
+Gitorial branch sync is configured in `.github/workflows/sync-gitorial.yml`.
