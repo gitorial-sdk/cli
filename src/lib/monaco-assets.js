@@ -132,6 +132,16 @@ body {
   cursor: pointer;
 }
 
+.gitorial-monaco-toolbar .copy-toggle {
+  background: transparent;
+  color: #f0f0f2;
+  border: 1px solid #3a3a3f;
+  border-radius: 999px;
+  padding: 6px 12px;
+  font-size: 12px;
+  cursor: pointer;
+}
+
 .gitorial-monaco-toolbar .retry-toggle {
   background: transparent;
   color: #f0f0f2;
@@ -141,6 +151,11 @@ body {
   font-size: 12px;
   cursor: pointer;
   display: none;
+}
+
+.gitorial-monaco-toolbar button:disabled {
+  opacity: 0.55;
+  cursor: not-allowed;
 }
 
 .gitorial-monaco-editor {
@@ -642,6 +657,7 @@ const monacoSetup = `
     const select = container.querySelector('[data-gitorial-files]');
     const toggle = container.querySelector('[data-gitorial-toggle]');
     const diffToggle = container.querySelector('[data-gitorial-diff]');
+    const copyToggle = container.querySelector('[data-gitorial-copy]');
     const footer = container.querySelector('[data-gitorial-footer]');
     const editorNode = container.querySelector('[data-gitorial-editor]');
     const retryToggle = document.createElement('button');
@@ -649,6 +665,7 @@ const monacoSetup = `
     retryToggle.className = 'retry-toggle';
     retryToggle.textContent = 'Retry editor';
     toolbar.appendChild(retryToggle);
+    copyToggle.disabled = true;
 
     let currentMode = 'template';
     let previousMode = 'template';
@@ -658,6 +675,7 @@ const monacoSetup = `
     let monacoSession = null;
     let monacoReady = false;
     let lastPayload = null;
+    let copyState = { text: '', label: '' };
 
     if (!solutionFiles.length) {
       toggle.style.display = 'none';
@@ -724,6 +742,45 @@ const monacoSetup = `
       return list.find((file) => file.label === label) || null;
     }
 
+    async function copyTextToClipboard(text) {
+      if (!text) {
+        return false;
+      }
+      if (navigator.clipboard && typeof navigator.clipboard.writeText === 'function') {
+        try {
+          await navigator.clipboard.writeText(text);
+          return true;
+        } catch (_error) {}
+      }
+      const textarea = document.createElement('textarea');
+      textarea.value = text;
+      textarea.setAttribute('readonly', 'readonly');
+      textarea.style.position = 'absolute';
+      textarea.style.left = '-9999px';
+      document.body.appendChild(textarea);
+      textarea.select();
+      let copied = false;
+      try {
+        copied = document.execCommand('copy');
+      } catch (_error) {
+        copied = false;
+      }
+      document.body.removeChild(textarea);
+      return copied;
+    }
+
+    function setCopyState(text, label) {
+      copyState = { text: text || '', label: label || '' };
+      copyToggle.disabled = !copyState.text;
+    }
+
+    function flashCopyLabel(label) {
+      copyToggle.textContent = label;
+      setTimeout(() => {
+        copyToggle.textContent = 'Copy code';
+      }, 1300);
+    }
+
     function setRetryVisible(visible) {
       retryToggle.style.display = visible ? 'inline-block' : 'none';
     }
@@ -762,10 +819,15 @@ const monacoSetup = `
 
     function renderPayload(payload) {
       lastPayload = payload;
-      renderFallback(editorNode, payload);
       if (monacoReady && monacoSession) {
+        const fallback = editorNode.querySelector('.gitorial-monaco-fallback');
+        if (fallback) {
+          fallback.classList.add('hidden');
+        }
         monacoSession.post(payload);
+        return;
       }
+      renderFallback(editorNode, payload);
     }
 
     async function setEditorFile(label) {
@@ -779,6 +841,11 @@ const monacoSetup = `
         const modified = solutionFile ? await getFileContent(solutionFile.path) : '';
         const language = detectMode((solutionFile || templateFile || { path: '' }).path);
         renderPayload({ type: 'diff', original, modified, language });
+        if (solutionFile) {
+          setCopyState(modified, label + ' (solution)');
+        } else {
+          setCopyState(original, label + ' (template)');
+        }
         return;
       }
 
@@ -790,6 +857,7 @@ const monacoSetup = `
       const content = await getFileContent(file.path);
       const language = detectMode(file.path);
       renderPayload({ type: 'set', content, language });
+      setCopyState(content, label + ' (' + currentMode + ')');
     }
 
     updateFileOptions();
@@ -846,6 +914,19 @@ const monacoSetup = `
       }
     });
 
+    copyToggle.addEventListener('click', async () => {
+      if (!copyState.text) {
+        return;
+      }
+      const ok = await copyTextToClipboard(copyState.text);
+      if (ok) {
+        flashCopyLabel('Copied');
+        return;
+      }
+      footer.textContent = 'Copy failed for ' + copyState.label + '.';
+      flashCopyLabel('Copy failed');
+    });
+
     retryToggle.addEventListener('click', () => {
       startMonacoSession();
       if (!solutionFiles.length) {
@@ -884,6 +965,7 @@ const monacoEmbed = (relativeAssetBase, manifestPath) => `
     <select class="file-select" data-gitorial-files></select>
     <button class="toggle" data-gitorial-toggle>View solution</button>
     <button class="diff-toggle" data-gitorial-diff>View diff</button>
+    <button class="copy-toggle" data-gitorial-copy>Copy code</button>
   </div>
   <div class="gitorial-monaco-editor" data-gitorial-editor></div>
   <div class="gitorial-monaco-footer" data-gitorial-footer></div>

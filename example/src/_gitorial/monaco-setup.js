@@ -376,6 +376,7 @@
     const select = container.querySelector('[data-gitorial-files]');
     const toggle = container.querySelector('[data-gitorial-toggle]');
     const diffToggle = container.querySelector('[data-gitorial-diff]');
+    const copyToggle = container.querySelector('[data-gitorial-copy]');
     const footer = container.querySelector('[data-gitorial-footer]');
     const editorNode = container.querySelector('[data-gitorial-editor]');
     const retryToggle = document.createElement('button');
@@ -383,6 +384,7 @@
     retryToggle.className = 'retry-toggle';
     retryToggle.textContent = 'Retry editor';
     toolbar.appendChild(retryToggle);
+    copyToggle.disabled = true;
 
     let currentMode = 'template';
     let previousMode = 'template';
@@ -392,6 +394,7 @@
     let monacoSession = null;
     let monacoReady = false;
     let lastPayload = null;
+    let copyState = { text: '', label: '' };
 
     if (!solutionFiles.length) {
       toggle.style.display = 'none';
@@ -458,6 +461,45 @@
       return list.find((file) => file.label === label) || null;
     }
 
+    async function copyTextToClipboard(text) {
+      if (!text) {
+        return false;
+      }
+      if (navigator.clipboard && typeof navigator.clipboard.writeText === 'function') {
+        try {
+          await navigator.clipboard.writeText(text);
+          return true;
+        } catch (_error) { }
+      }
+      const textarea = document.createElement('textarea');
+      textarea.value = text;
+      textarea.setAttribute('readonly', 'readonly');
+      textarea.style.position = 'absolute';
+      textarea.style.left = '-9999px';
+      document.body.appendChild(textarea);
+      textarea.select();
+      let copied = false;
+      try {
+        copied = document.execCommand('copy');
+      } catch (_error) {
+        copied = false;
+      }
+      document.body.removeChild(textarea);
+      return copied;
+    }
+
+    function setCopyState(text, label) {
+      copyState = { text: text || '', label: label || '' };
+      copyToggle.disabled = !copyState.text;
+    }
+
+    function flashCopyLabel(label) {
+      copyToggle.textContent = label;
+      setTimeout(() => {
+        copyToggle.textContent = 'Copy code';
+      }, 1300);
+    }
+
     function setRetryVisible(visible) {
       retryToggle.style.display = visible ? 'inline-block' : 'none';
     }
@@ -513,6 +555,11 @@
         const modified = solutionFile ? await getFileContent(solutionFile.path) : '';
         const language = detectMode((solutionFile || templateFile || { path: '' }).path);
         renderPayload({ type: 'diff', original, modified, language });
+        if (solutionFile) {
+          setCopyState(modified, label + ' (solution)');
+        } else {
+          setCopyState(original, label + ' (template)');
+        }
         return;
       }
 
@@ -524,6 +571,7 @@
       const content = await getFileContent(file.path);
       const language = detectMode(file.path);
       renderPayload({ type: 'set', content, language });
+      setCopyState(content, label + ' (' + currentMode + ')');
     }
 
     updateFileOptions();
@@ -578,6 +626,19 @@
         selectedLabel = select.value;
         await setEditorFile(selectedLabel);
       }
+    });
+
+    copyToggle.addEventListener('click', async () => {
+      if (!copyState.text) {
+        return;
+      }
+      const ok = await copyTextToClipboard(copyState.text);
+      if (ok) {
+        flashCopyLabel('Copied');
+        return;
+      }
+      footer.textContent = 'Copy failed for ' + copyState.label + '.';
+      flashCopyLabel('Copy failed');
     });
 
     retryToggle.addEventListener('click', () => {

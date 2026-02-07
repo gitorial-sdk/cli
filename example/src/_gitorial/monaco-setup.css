@@ -132,6 +132,16 @@ body {
   cursor: pointer;
 }
 
+.gitorial-monaco-toolbar .copy-toggle {
+  background: transparent;
+  color: #f0f0f2;
+  border: 1px solid #3a3a3f;
+  border-radius: 999px;
+  padding: 6px 12px;
+  font-size: 12px;
+  cursor: pointer;
+}
+
 .gitorial-monaco-toolbar .retry-toggle {
   background: transparent;
   color: #f0f0f2;
@@ -141,6 +151,11 @@ body {
   font-size: 12px;
   cursor: pointer;
   display: none;
+}
+
+.gitorial-monaco-toolbar button:disabled {
+  opacity: 0.55;
+  cursor: not-allowed;
 }
 
 .gitorial-monaco-editor {
