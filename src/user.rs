@@ -1,14 +1,18 @@
 #[derive(Debug)]
 pub struct User {
-    // TODO: add fields for name and age
+    name: String,
+    age: u8,
 }
 
 impl User {
-    pub fn new(/* TODO: params */) -> Self {
-        todo!()
+    pub fn new(name: impl Into<String>, age: u8) -> Self {
+        Self {
+            name: name.into(),
+            age,
+        }
     }
 
     pub fn summary(&self) -> String {
-        todo!()
+        format!("{} ({} years old)", self.name, self.age)
     }
 }
