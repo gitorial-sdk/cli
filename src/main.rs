@@ -1,5 +1,8 @@
-// Step 0: A tiny Rust app scaffold.
+mod user;
+
+use user::User;
 
 fn main() {
-    println!("Welcome to the example tutorial!");
+    let user = User::new(/* TODO */);
+    println!("{}", user.summary());
 }
