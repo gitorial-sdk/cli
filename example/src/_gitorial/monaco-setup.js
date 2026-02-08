@@ -168,7 +168,7 @@
     fallback.classList.remove('hidden');
   }
 
-  function createMonacoSession(editorNode, onReady, onFailure) {
+  function createMonacoSession(editorNode, onReady, onFailure, onEdit) {
     const iframe = document.createElement('iframe');
     iframe.setAttribute('title', 'Gitorial Editor');
     iframe.className = 'gitorial-monaco-frame';
@@ -188,13 +188,30 @@
       "  var MONACO_BASE = '" + MONACO_BASE + "';",
       '  var editor = null;',
       '  var diffEditor = null;',
+      '  var changeSubscription = null;',
       "  var currentMode = 'single';",
       '  var pendingPayload = null;',
       '  var isReady = false;',
+      '  var suppressChange = false;',
       '  function post(type, detail) {',
       "    parent.postMessage({ source: 'gitorial-monaco', type: type, detail: detail }, '*');",
       '  }',
       '  function getContainer() { return document.getElementById(\'editor\'); }',
+      '  function resetContainer() {',
+      '    var container = getContainer();',
+      '    container.innerHTML = "";',
+      '  }',
+      '  function attachChangeHandler() {',
+      '    if (!editor) { return; }',
+      '    if (changeSubscription) {',
+      '      changeSubscription.dispose();',
+      '      changeSubscription = null;',
+      '    }',
+      '    changeSubscription = editor.onDidChangeModelContent(function () {',
+      '      if (suppressChange) { return; }',
+      "      post('change', editor.getValue());",
+      '    });',
+      '  }',
       '  function disposeEditorModel() {',
       '    if (!editor) { return; }',
       '    var model = editor.getModel();',
@@ -209,6 +226,10 @@
       '  }',
       '  function disposeEditor() {',
       '    if (!editor) { return; }',
+      '    if (changeSubscription) {',
+      '      changeSubscription.dispose();',
+      '      changeSubscription = null;',
+      '    }',
       '    disposeEditorModel();',
       '    editor.dispose();',
       '    editor = null;',
@@ -219,9 +240,10 @@
       '    diffEditor.dispose();',
       '    diffEditor = null;',
       '  }',
-      '  function ensureEditor(content, language) {',
+      '  function ensureEditor(content, language, readOnly) {',
       "    if (currentMode !== 'single') {",
       '      disposeDiffEditor();',
+      '      resetContainer();',
       "      currentMode = 'single';",
       '    }',
       '    if (!editor) {',
@@ -230,16 +252,21 @@
       '        language: language,',
       "        theme: 'vs-dark',",
       '        automaticLayout: true,',
-      '        readOnly: true',
+      '        readOnly: !!readOnly',
       '      });',
+      '      attachChangeHandler();',
       '      return;',
       '    }',
+      '    editor.updateOptions({ readOnly: !!readOnly });',
+      '    suppressChange = true;',
       '    disposeEditorModel();',
       '    editor.setModel(monaco.editor.createModel(content, language));',
+      '    suppressChange = false;',
       '  }',
       '  function ensureDiffEditor(original, modified, language) {',
       "    if (currentMode !== 'diff') {",
       '      disposeEditor();',
+      '      resetContainer();',
       "      currentMode = 'diff';",
       '    }',
       '    if (!diffEditor) {',
@@ -260,7 +287,7 @@
       "      ensureDiffEditor(payload.original || '', payload.modified || '', payload.language || 'plaintext');",
       '      return;',
       '    }',
-      "    ensureEditor(payload.content || '', payload.language || 'plaintext');",
+      "    ensureEditor(payload.content || '', payload.language || 'plaintext', !!payload.readOnly);",
       '  }',
       '  window.addEventListener(\'message\', function (event) {',
       '    var data = event.data || {};',
@@ -303,11 +330,15 @@
     let settled = false;
     let timeoutId = null;
 
-    function cleanUp() {
+    function clearTimer() {
       if (timeoutId) {
         clearTimeout(timeoutId);
         timeoutId = null;
       }
+    }
+
+    function cleanUp() {
+      clearTimer();
       window.removeEventListener('message', onMessage);
     }
 
@@ -319,12 +350,16 @@
       if (data.source !== 'gitorial-monaco') {
         return;
       }
+      if (data.type === 'change') {
+        onEdit(data.detail || '');
+        return;
+      }
       if (data.type === 'ready') {
         if (settled) {
           return;
         }
         settled = true;
-        cleanUp();
+        clearTimer();
         onReady(iframe);
         return;
       }
@@ -391,6 +426,8 @@
     let selectedLabel = null;
     const templateFiles = config.template || [];
     const solutionFiles = config.solution || [];
+    const fileContentCache = new Map();
+    const templateEdits = new Map();
     let monacoSession = null;
     let monacoReady = false;
     let lastPayload = null;
@@ -454,7 +491,15 @@
     }
 
     function getFileContent(filePath) {
-      return fetch(filePath).then((res) => res.text());
+      if (fileContentCache.has(filePath)) {
+        return Promise.resolve(fileContentCache.get(filePath));
+      }
+      return fetch(filePath)
+        .then((res) => res.text())
+        .then((text) => {
+          fileContentCache.set(filePath, text);
+          return text;
+        });
     }
 
     function findFile(list, label) {
@@ -469,7 +514,7 @@
         try {
           await navigator.clipboard.writeText(text);
           return true;
-        } catch (_error) { }
+        } catch (_error) {}
       }
       const textarea = document.createElement('textarea');
       textarea.value = text;
@@ -532,16 +577,28 @@
           }
           setRetryVisible(true);
           footer.textContent = 'Monaco is unavailable (' + reason + '). Using fallback renderer.';
+        },
+        (content) => {
+          if (currentMode !== 'template' || !selectedLabel) {
+            return;
+          }
+          templateEdits.set(selectedLabel, content);
+          setCopyState(content, selectedLabel + ' (template)');
         }
       );
     }
 
     function renderPayload(payload) {
       lastPayload = payload;
-      renderFallback(editorNode, payload);
       if (monacoReady && monacoSession) {
+        const fallback = editorNode.querySelector('.gitorial-monaco-fallback');
+        if (fallback) {
+          fallback.classList.add('hidden');
+        }
         monacoSession.post(payload);
+        return;
       }
+      renderFallback(editorNode, payload);
     }
 
     async function setEditorFile(label) {
@@ -551,7 +608,12 @@
       if (currentMode === 'diff') {
         const templateFile = findFile(templateFiles, label);
         const solutionFile = findFile(solutionFiles, label);
-        const original = templateFile ? await getFileContent(templateFile.path) : '';
+        let original = '';
+        if (templateEdits.has(label)) {
+          original = templateEdits.get(label);
+        } else if (templateFile) {
+          original = await getFileContent(templateFile.path);
+        }
         const modified = solutionFile ? await getFileContent(solutionFile.path) : '';
         const language = detectMode((solutionFile || templateFile || { path: '' }).path);
         renderPayload({ type: 'diff', original, modified, language });
@@ -568,9 +630,14 @@
       if (!file) {
         return;
       }
-      const content = await getFileContent(file.path);
+      let content = '';
+      if (currentMode === 'template' && templateEdits.has(label)) {
+        content = templateEdits.get(label);
+      } else {
+        content = await getFileContent(file.path);
+      }
       const language = detectMode(file.path);
-      renderPayload({ type: 'set', content, language });
+      renderPayload({ type: 'set', content, language, readOnly: currentMode !== 'template' });
       setCopyState(content, label + ' (' + currentMode + ')');
     }
 
@@ -622,6 +689,9 @@
       }
       updateFileOptions();
       toggle.disabled = currentMode === 'diff';
+      if (monacoSession) {
+        startMonacoSession();
+      }
       if (select.value) {
         selectedLabel = select.value;
         await setEditorFile(selectedLabel);
@@ -659,8 +729,13 @@
       return;
     }
     containers.forEach((container) => {
+      if (container.dataset.gitorialInitialized === 'true') {
+        return;
+      }
+      container.dataset.gitorialInitialized = 'true';
       initMonaco(container).catch((error) => {
         console.error(error);
+        delete container.dataset.gitorialInitialized;
       });
     });
   }
