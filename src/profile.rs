@@ -1,10 +1,10 @@
 #[derive(Debug)]
 pub struct Profile {
-    // TODO: add a bio field
+    bio: String,
 }
 
 impl Profile {
-    pub fn new(/* TODO */) -> Self {
-        todo!()
+    pub fn new(bio: impl Into<String>) -> Self {
+        Self { bio: bio.into() }
     }
 }

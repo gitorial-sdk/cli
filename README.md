@@ -1,5 +1,5 @@
-<!-- gitorial: template -->
+<!-- gitorial: solution -->
 
 # Add a Profile struct
 
-We will add a `Profile` struct with a bio and a method to attach it to the user.
+The `Profile` struct is complete and wired into `User`.

@@ -4,7 +4,7 @@ use crate::profile::Profile;
 pub struct User {
     name: String,
     age: u8,
-    // TODO: add an optional profile field
+    profile: Option<Profile>,
 }
 
 impl User {
@@ -12,12 +12,12 @@ impl User {
         Self {
             name: name.into(),
             age,
-            // TODO: initialize profile
+            profile: None,
         }
     }
 
     pub fn with_profile(mut self, profile: Profile) -> Self {
-        // TODO: attach the profile
+        self.profile = Some(profile);
         self
     }
 
