@@ -1,15 +1,7 @@
-<!-- gitorial: section -->
+<!-- gitorial: action -->
 
-# Gitorial Example
+# Project Overview
 
-Gitorial is a tutorial format built on top of Git history.
+In this tutorial we will build a tiny Rust app using a few structs and methods.
 
-Each learning step is represented as a meaningful change, so code evolution stays explicit and reviewable.
-
-In this example:
-
-- `template` shows TODO-driven starter code
-- `solution` shows the completed step
-- `section` pages provide context without code snapshots
-
-Continue to Step 1 to start the Rust walkthrough.
+You'll start with a `User` struct, then add a `Profile`, and finally wire a `main` function.
