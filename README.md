@@ -1,5 +1,5 @@
-<!-- gitorial: solution -->
+<!-- gitorial: template -->
 
-# Define a User struct
+# Add a Profile struct
 
-Here is the completed `User` struct with a constructor and a display helper.
+We will add a `Profile` struct with a bio and a method to attach it to the user.

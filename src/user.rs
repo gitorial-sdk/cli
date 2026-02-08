@@ -1,7 +1,10 @@
+use crate::profile::Profile;
+
 #[derive(Debug)]
 pub struct User {
     name: String,
     age: u8,
+    // TODO: add an optional profile field
 }
 
 impl User {
@@ -9,10 +12,20 @@ impl User {
         Self {
             name: name.into(),
             age,
+            // TODO: initialize profile
         }
     }
 
+    pub fn with_profile(mut self, profile: Profile) -> Self {
+        // TODO: attach the profile
+        self
+    }
+
     pub fn summary(&self) -> String {
-        format!("{} ({} years old)", self.name, self.age)
+        let bio = match &self.profile {
+            Some(profile) => profile.bio.as_str(),
+            None => "no bio yet",
+        };
+        format!("{} ({}) - {}", self.name, self.age, bio)
     }
 }
