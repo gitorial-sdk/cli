@@ -3,11 +3,12 @@
 const { program } = require('commander');
 const { buildGitorial } = require('./commands/build-gitorial');
 const { buildMdbook } = require('./commands/build-mdbook');
+const { version } = require('../package.json');
 
 program
 	.name('gitorial-cli')
 	.description('CLI tools for building and maintaining Gitorial tutorials')
-	.version('2.0.0');
+	.version(version);
 
 program
 	.command('build-gitorial')
