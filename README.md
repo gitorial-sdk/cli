@@ -67,6 +67,31 @@ Behavior:
 - Replaces only the `source` directory content (for example `src/` or `example/src/`).
 - Leaves files outside that directory untouched.
 
+### `install-workflows`
+
+Install a standard CI set for mdBook tutorials.
+
+```sh
+gitorial-cli install-workflows -r /path/to/repo -i master -o gitorial -s src --force
+```
+
+Options:
+
+- `-r, --repo <path>` repo path (default: current directory)
+- `-i, --input <branch>` mdBook/workshop branch (default: `master`)
+- `-o, --output <branch>` gitorial branch (default: `gitorial`)
+- `-s, --source <dir>` mdBook source directory (default: `src`)
+- `--force` overwrite existing workflow files
+- `--commit` commit generated workflow files
+- `--verbose` verbose logs
+
+Behavior:
+
+- Writes `.github/workflows/check.yml`.
+- Writes `.github/workflows/deploy.yml`.
+- Writes `.github/workflows/gitorial-sync.yml`.
+- Replaces placeholders with your selected branch/source settings.
+
 ## Step Types
 
 A gitorial step must map to one of these types:
@@ -130,10 +155,11 @@ Notes:
 
 ## CI
 
-Template workflow:
+Workflow templates:
 
+- `templates/check.yml`
+- `templates/deploy.yml`
 - `templates/gitorial-sync.yml`
-- Syncs `gitorial` on pushes to `master`
 
 This repo also includes a concrete workflow:
 
