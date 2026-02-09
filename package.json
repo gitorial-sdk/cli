@@ -1,6 +1,6 @@
 {
   "name": "gitorial-cli",
-  "version": "2.1.1",
+  "version": "2.1.2",
   "description": "CLI tools for building and maintaining Gitorial tutorials",
   "main": "src/index.js",
   "bin": {
